@@ -174,7 +174,28 @@
       </div>
       <div id="studyDone" style="display:none;text-align:center;padding:40px 20px;color:var(--muted)"></div>
     </div>
+        <div id="studyModes" style="display:flex;gap:6px;margin-bottom:8px">
+      <button class="s" id="mCards" onclick="setMode('cards')" style="margin:0;font-size:13px;padding:10px">🗂 Карточки</button>
+      <button class="s" id="mListen" onclick="setMode('listen')" style="margin:0;font-size:13px;padding:10px">🎧 Аудирование</button>
+      <button class="s" id="mType" onclick="setMode('type')" style="margin:0;font-size:13px;padding:10px">⌨️ Ввод</button>
+    </div>
+
     <button class="g" id="reveal" onclick="reveal()">Показать ответ</button>
+
+    <!-- Режим Аудирование -->
+    <div id="listenBox" style="display:none">
+      <div id="listenWord" class="muted center" style="margin-bottom:8px">Нажмите 🔊, чтобы услышать</div>
+      <button class="s" onclick="say(cur&&cur.word)" style="margin-bottom:8px">🔊 Прослушать</button>
+      <div id="listenOptions" style="display:grid;gap:8px"></div>
+    </div>
+
+    <!-- Режим Ввод -->
+    <div id="typeBox" style="display:none">
+      <input id="typeInput" placeholder="Введите перевод…" autocomplete="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter')typeCheck()">
+      <button class="g" onclick="typeCheck()">Проверить</button>
+      <div id="typeFeedback" class="center" style="min-height:24px;font-weight:600"></div>
+    </div>
+
     <div id="buttons" style="display:none">
       <div class="row">
         <button class="r" onclick="ans(0)">Не знаю</button>
@@ -275,6 +296,19 @@
         <label>Тема по времени суток</label>
         <input type="checkbox" id="autoThemeChk" onchange="onAutoThemeChange()" style="width:auto;margin:0">
       </div>
+    </div>    <div class="card">
+      <div class="settings-row">
+        <label>Напоминание раз в день</label>
+        <input type="checkbox" id="reminderChk" onchange="onReminderChange()" style="width:auto;margin:0">
+      </div>
+      <div class="settings-row">
+        <label>Время напоминания</label>
+        <input type="time" id="reminderTime" onchange="onReminderTimeChange()" style="width:auto;margin:0;padding:6px">
+      </div>
+      <div class="muted" style="margin-top:4px">
+        Уведомление придёт, только если приложение открыто или установлено как PWA.
+      </div>
+      <button class="s" onclick="testReminder()" style="margin-top:8px">🔔 Проверить уведомление</button>
     </div>
     <div class="card">
       <div class="muted" style="margin-bottom:8px">Данные</div>
