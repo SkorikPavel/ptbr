@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f1419">
+<title>Português BR</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇧🇷</text></svg>">
+<style>
+  :root{
+    --bg:#0f1419; --card:#1a2129; --card2:#232c37; --border:#2d3844;
+    --text:#e6edf3; --muted:#8b98a5; --accent:#3498db;
+    --ok:#2ecc71; --warn:#f39c12; --bad:#e74c3c;
+  }
+  html[data-theme="light"]{
+    --bg:#f5f7fa; --card:#ffffff; --card2:#eef1f5; --border:#d8dee6;
+    --text:#1a2129; --muted:#5b6673; --accent:#2980b9;
+    --ok:#27ae60; --warn:#e67e22; --bad:#c0392b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif;padding-bottom:80px}
+  header{padding:14px 16px;border-bottom:1px solid var(--border);font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  header .theme{background:none;color:var(--muted);border:none;width:auto;padding:6px 10px;font-size:18px;margin:0;cursor:pointer}
+  .c{padding:16px;max-width:600px;margin:0 auto}
+  .card{background:var(--card);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--border)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .stat{background:var(--card2);padding:12px;border-radius:10px;text-align:center}
+  .stat b{font-size:24px;color:var(--accent);display:block}
+  .stat span{font-size:11px;color:var(--muted)}
+  button{background:var(--accent);color:#fff;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:600;width:100%;margin-bottom:8px;cursor:pointer;font-family:inherit}
+  button.g{background:var(--ok)}button.r{background:var(--bad)}button.w{background:var(--warn)}
+  button.s{background:var(--card2);color:var(--text)}
+  .row{display:flex;gap:8px}.row button{margin-bottom:0}
+  .big{font-size:32px;font-weight:700;text-align:center;margin:16px 0}
+  .tr{font-size:22px;color:var(--ok);text-align:center;margin:8px 0}
+  .ex{font-size:14px;color:var(--muted);font-style:italic;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+  input,select{width:100%;background:var(--card2);color:var(--text);border:1px solid var(--border);padding:12px;border-radius:10px;font-size:15px;margin-bottom:8px;font-family:inherit}
+  .bar{height:6px;background:var(--card2);border-radius:3px;overflow:hidden;margin-bottom:16px}
+  .bar div{height:100%;background:var(--ok);width:0;transition:width .3s}
+  .screen{display:none}.screen.on{display:block}
+  .tag{display:inline-block;padding:4px 10px;border-radius:6px;font-size:12px;background:var(--accent)}
+  .word{background:var(--card);border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid var(--border)}
+  nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg);border-top:1px solid var(--border);display:flex;padding:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+  nav button{background:none;margin:0;font-size:11px;color:var(--muted);flex:1;padding:8px 4px}
+  nav button.on{color:var(--accent)}
+  .muted{color:var(--muted);font-size:12px}
+  .center{text-align:center}
+  .chart{display:flex;align-items:flex-end;gap:4px;height:80px;margin-top:8px}
+  .chart .col{flex:1;background:var(--card2);border-radius:4px 4px 0 0;position:relative;min-height:2px}
+  .chart .col.has{background:var(--ok)}
+  .chart .col span{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-size:9px;color:var(--muted)}
+  .chart-wrap{padding-bottom:22px}
+  .label{font-size:12px;color:var(--muted);margin-bottom:6px;display:block}
+  .range-val{font-weight:700;color:var(--accent)}
+  .settings-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px}
+  .settings-row label{font-size:14px;flex:1}
+  .settings-row input[type=range]{margin:0;padding:0;flex:1;max-width:160px}
+  .deck-chip{display:inline-flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--border);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
+  .deck-chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .deck-bar{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:-4px}
+  .deck-bar::-webkit-scrollbar{display:none}
+  .deck-icon{font-size:15px}
+  .deck-manage{display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--card2);border-radius:10px;margin-bottom:8px;gap:8px}
+  .deck-manage .name{font-weight:600;display:flex;align-items:center;gap:6px;min-width:0}
+  .deck-manage .actions{display:flex;gap:6px;flex-shrink:0}
+  .deck-manage button{width:auto;padding:6px 10px;font-size:12px;margin:0}
+</style>
+</head>
+<body>
+<header>
+  <span>🇧🇷 Português Brasileiro</span>
+  <button class="theme" id="themeBtn" onclick="toggleTheme()" title="Тема">🌙</button>
+</header>
+<div class="c">
+
+  <div class="screen on" id="s-home">
+    <div class="card">
+      <div class="label">Колода</div>
+      <div class="deck-bar" id="deckBar"></div>
+    </div>
+    <div class="card">
+      <div class="grid">
+        <div class="stat"><b id="nNew">0</b><span>Новых</span></div>
+        <div class="stat"><b id="nDue">0</b><span>К повторению</span></div>
+        <div class="stat"><b id="nLearned">0</b><span>Выучено</span></div>
+        <div class="stat"><b id="nStreak">0</b><span>Дней подряд</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <button class="g" onclick="study()">📖 Учить слова</button>
+      <button onclick="review()">🔄 Повторить</button>
+      <button class="s" onclick="show('s-words');renderWords()">📚 Все слова</button>
+      <button class="s" onclick="show('s-stats');renderStats()">📊 Статистика</button>
+      <button class="s" onclick="show('s-decks');renderDecksManage()">🗂️ Колоды</button>
+      <button class="s" onclick="show('s-settings')">⚙️ Настройки</button>
+    </div>
+    <div class="card">
+      <div class="muted" style="margin-bottom:6px">Активность за 14 дней</div>
+      <div class="chart-wrap"><div class="chart" id="miniChart"></div></div>
+    </div>
+  </div>
+
+  <div class="screen" id="s-study">
+    <div class="bar"><div id="bar"></div></div>
+    <div class="muted center" id="counter" style="margin-bottom:8px"></div>
+    <div class="card">
+      <div id="studyContent">
+        <div class="center">
+          <span class="tag" id="tag">Новое</span>
+          <span class="tag" id="deckTag" style="background:var(--card2);color:var(--muted);margin-left:6px"></span>
+        </div>
+        <div class="big" id="w"></div>
+        <div class="center" style="margin-bottom:8px">
+          <button class="s" style="width:auto;padding:8px 16px" onclick="say(document.getElementById('w').textContent)">🔊</button>
+        </div>
+        <div id="ans" style="display:none">
+          <div class="tr" id="tr"></div>
+          <div class="ex" id="ex"></div>
+        </div>
+      </div>
+      <div id="studyDone" style="display:none;text-align:center;padding:40px 20px;color:var(--muted)"></div>
+    </div>
+    <button class="g" id="reveal" onclick="reveal()">Показать ответ</button>
+    <div id="buttons" style="display:none">
+      <div class="row">
+        <button class="r" onclick="ans(0)">Не знаю</button>
+        <button class="w" onclick="ans(1)">Сложно</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button onclick="ans(2)">Норм</button>
+        <button class="g" onclick="ans(3)">Легко</button>
+      </div>
+    </div>
+    <button class="s" style="margin-top:12px;font-size:13px" onclick="show('s-home');renderHome()">← Выйти</button>
+  </div>
+
+  <div class="screen" id="s-words">
+    <button class="g" onclick="openAdd()">+ Добавить слово</button>
+    <div class="card" style="padding:10px">
+      <div class="deck-bar" id="wordsFilterBar"></div>
+    </div>
+    <div id="list"></div>
+    <button class="s" onclick="show('s-home');renderHome()">← Назад</button>
+  </div>
+
+  <div class="screen" id="s-add">
+    <div class="card">
+      <input id="iW" placeholder="Слово (pt-BR)">
+      <input id="iT" placeholder="Перевод (ru)">
+      <input id="iE" placeholder="Пример">
+      <label class="label">Колода</label>
+      <select id="iD"></select>
+      <div class="row" style="margin-top:8px">
+        <button class="s" onclick="show('s-words');renderWords()">Отмена</button>
+        <button class="g" onclick="saveWord()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="s-decks">
+    <div class="card">
+      <label class="label">Новая колода</label>
+      <input id="deckName" placeholder="Название (например, «Животные»)">
+      <input id="deckEmoji" placeholder="Эмодзи (необязательно)" maxlength="4">
+      <button class="g" onclick="createDeck()">+ Создать</button>
+    </div>
+    <div id="deckList"></div>
+    <button class="s" onclick="show('s-home');renderHome()">← Назад</button>
+  </div>
+
+  <div class="screen" id="s-stats">
+    <div class="card">
+      <div class="muted" style="margin-bottom:6px">Ответов за 14 дней</div>
+      <div class="chart-wrap"><div class="chart" id="bigChart"></div></div>
+    </div>
+    <div class="card">
+      <div class="grid">
+        <div class="stat"><b id="stTotal">0</b><span>Всего слов</span></div>
+        <div class="stat"><b id="stLearned">0</b><span>Выучено</span></div>
+        <div class="stat"><b id="stBest">0</b><span>Лучший streak</span></div>
+        <div class="stat"><b id="stAnswers">0</b><span>Всего ответов</span></div>
+      </div>
+    </div>
+    <button class="s" onclick="show('s-home');renderHome()">← Назад</button>
+  </div>
+
+  <div class="screen" id="s-settings">
+    <div class="card">
+      <div class="settings-row">
+        <label>Новых слов за сессию</label>
+        <span class="range-val" id="limitVal">20</span>
+      </div>
+      <input type="range" id="limitRange" min="5" max="50" step="5" oninput="onLimitChange()">
+    </div>
+    <div class="card">
+      <div class="muted" style="margin-bottom:8px">Данные</div>
+      <button class="s" onclick="exportData()">⬇️ Экспорт JSON</button>
+      <button class="s" onclick="document.getElementById('importFile').click()">⬆️ Импорт JSON</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importData(event)">
+      <button class="r" onclick="resetAll()">🗑️ Сбросить всё</button>
+    </div>
+    <button class="s" onclick="show('s-home');renderHome()">← Назад</button>
+  </div>
+
+</div>
+
+<nav>
+  <button class="on" id="n-home" onclick="show('s-home');renderHome()">🏠 Главная</button>
+  <button id="n-study" onclick="study()">📖 Учить</button>
+  <button id="n-words" onclick="show('s-words');renderWords()">📚 Слова</button>
+</nav>
+<script>
+/* ============================================================
+   КОЛОДЫ И СЛОВА
+   ============================================================ */
+const STARTER_DECKS=[
+  {id:'food',      name:'Еда',           emoji:'🍽️'},
+  {id:'clothes',   name:'Одежда',        emoji:'👕'},
+  {id:'furniture', name:'Мебель',        emoji:'🛋️'},
+  {id:'house',     name:'Дом',           emoji:'🏠'},
+  {id:'medicine',  name:'Медицина',      emoji:'🩺'},
+  {id:'verbs',     name:'Глаголы',       emoji:'⚡'},
+  {id:'daily',     name:'Повседневное',  emoji:'☀️'},
+  {id:'adjectives',name:'Прилагательные',emoji:'🎨'},
+  {id:'places',    name:'Места',         emoji:'📍'}
+];
+
+/* [pt, ru, пример, deckId] */
+const STARTER=[
+  // 🍽️ Еда
+  ["água","вода","Quero um copo de água.","food"],
+  ["café","кофе","Um café, por favor.","food"],
+  ["pão","хлеб","Pão de queijo é delicioso.","food"],
+  ["leite","молоко","Café com leite.","food"],
+  ["fruta","фрукт","Como fruta todo dia.","food"],
+  ["arroz","рис","O arroz está pronto.","food"],
+  ["feijão","фасоль","Feijão é típico do Brasil.","food"],
+  ["carne","мясо","Não como carne.","food"],
+  ["peixe","рыба","O peixe está fresco.","food"],
+  ["queijo","сыр","Pão com queijo.","food"],
+  ["ovo","яйцо","Um ovo cozido.","food"],
+  ["suco","сок","Suco de laranja.","food"],
+  ["cerveja","пиво","Uma cerveja gelada.","food"],
+  ["sobremesa","десерт","Que sobremesa você quer?","food"],
+
+  // 👕 Одежда
+  ["roupa","одежда","Preciso comprar roupa.","clothes"],
+  ["camisa","рубашка","Uma camisa branca.","clothes"],
+  ["camiseta","футболка","Camiseta azul.","clothes"],
+  ["calça","брюки","Calça jeans.","clothes"],
+  ["saia","юбка","Saia curta.","clothes"],
+  ["vestido","платье","Vestido bonito!","clothes"],
+  ["sapato","обувь","Sapato novo.","clothes"],
+  ["tênis","кроссовки","Tênis para correr.","clothes"],
+  ["meia","носок","Um par de meias.","clothes"],
+  ["chapéu","шляпа","Chapéu de palha.","clothes"],
+  ["casaco","куртка","Casaco de inverno.","clothes"],
+  ["bolsa","сумка","Bolsa de couro.","clothes"],
+  ["cinto","ремень","Cinto de couro.","clothes"],
+  ["óculos","очки","Óculos de sol.","clothes"],
+
+  // 🛋️ Мебель
+  ["mesa","стол","A mesa é de madeira.","furniture"],
+  ["cadeira","стул","Sente-se na cadeira.","furniture"],
+  ["sofá","диван","Sofá confortável.","furniture"],
+  ["cama","кровать","A cama é grande.","furniture"],
+  ["armário","шкаф","Armário de roupa.","furniture"],
+  ["estante","полка","Livros na estante.","furniture"],
+  ["espelho","зеркало","Olhe no espelho.","furniture"],
+  ["lâmpada","лампа","A lâmpada queimou.","furniture"],
+  ["tapete","ковёр","Tapete vermelho.","furniture"],
+  ["geladeira","холодильник","A geladeira está cheia.","furniture"],
+  ["fogão","плита","O fogão está quente.","furniture"],
+  ["pia","раковина","A pia está suja.","furniture"],
+
+  // 🏠 Дом
+  ["casa","дом","Minha casa é grande.","house"],
+  ["apartamento","квартира","Moro em um apartamento.","house"],
+  ["quarto","комната","Meu quarto é pequeno.","house"],
+  ["cozinha","кухня","A cozinha é nova.","house"],
+  ["banheiro","ванная","O banheiro está livre.","house"],
+  ["sala","гостиная","A sala é ampla.","house"],
+  ["porta","дверь","Feche a porta.","house"],
+  ["janela","окно","Abra a janela.","house"],
+  ["chave","ключ","Perdi a chave.","house"],
+  ["telhado","крыша","O telhado é vermelho.","house"],
+  ["jardim","сад","O jardim é bonito.","house"],
+  ["garagem","гараж","Carro na garagem.","house"],
+
+  // 🩺 Медицина
+  ["médico","врач","O médico chegou.","medicine"],
+  ["hospital","больница","Vou ao hospital.","medicine"],
+  ["remédio","лекарство","Tome o remédio.","medicine"],
+  ["dor","боль","Sinto dor de cabeça.","medicine"],
+  ["cabeça","голова","Minha cabeça dói.","medicine"],
+  ["garganta","горло","Dor de garganta.","medicine"],
+  ["estômago","живот","Dor de estômago.","medicine"],
+  ["febre","температура","Estou com febre.","medicine"],
+  ["tosse","кашель","Tenho tosse.","medicine"],
+  ["gripe","грипп","Peguei uma gripe.","medicine"],
+  ["sangue","кровь","Preciso de sangue.","medicine"],
+  ["enfermeira","медсестра","A enfermeira é gentil.","medicine"],
+  ["receita","рецепт","O médico deu a receita.","medicine"],
+  ["farmácia","аптека","A farmácia está aberta.","medicine"],
+
+  // ⚡ Глаголы
+  ["comer","есть","Vamos comer algo?","verbs"],
+  ["beber","пить","Preciso beber água.","verbs"],
+  ["falar","говорить","Você fala inglês?","verbs"],
+  ["morar","жить","Eu moro em Moscou.","verbs"],
+  ["trabalhar","работать","Ela trabalha muito.","verbs"],
+  ["estudar","учиться","Estudo português.","verbs"],
+  ["querer","хотеть","Quero aprender rápido.","verbs"],
+  ["poder","мочь","Você pode me ajudar?","verbs"],
+  ["precisar","нуждаться","Preciso de ajuda.","verbs"],
+  ["gostar","нравиться","Gosto muito do Brasil.","verbs"],
+  ["comprar","покупать","Vou comprar pão.","verbs"],
+  ["dormir","спать","Preciso dormir.","verbs"],
+
+  // ☀️ Повседневное
+  ["amigo","друг","Ele é meu amigo.","daily"],
+  ["trabalho","работа","Vou ao trabalho agora.","daily"],
+  ["tempo","время / погода","Não tenho tempo hoje.","daily"],
+  ["dia","день","Bom dia!","daily"],
+  ["noite","ночь","Boa noite!","daily"],
+  ["hoje","сегодня","Hoje eu trabalho.","daily"],
+  ["amanhã","завтра","Amanhã vou à praia.","daily"],
+  ["sempre","всегда","Ele sempre chega cedo.","daily"],
+  ["nunca","никогда","Eu nunca fui ao Brasil.","daily"],
+  ["muito","очень","Obrigado, muito bom!","daily"],
+  ["pouco","мало","Falo pouco português.","daily"],
+  ["obrigado","спасибо","Muito obrigado!","daily"],
+  ["por favor","пожалуйста","Um café, por favor.","daily"],
+  ["desculpa","извини","Desculpa, não entendi.","daily"],
+
+  // 🎨 Прилагательные
+  ["bom","хороший","Este livro é muito bom.","adjectives"],
+  ["ruim","плохой","O tempo está ruim.","adjectives"],
+  ["grande","большой","É uma casa grande.","adjectives"],
+  ["pequeno","маленький","Um café pequeno.","adjectives"],
+  ["bonito","красивый","Que lugar bonito!","adjectives"],
+  ["novo","новый","Comprei um carro novo.","adjectives"],
+  ["velho","старый","Meu avô é velho.","adjectives"],
+  ["caro","дорогой","Muito caro!","adjectives"],
+
+  // 📍 Места
+  ["cidade","город","São Paulo é uma cidade grande.","places"],
+  ["praia","пляж","Vamos à praia amanhã.","places"],
+  ["rua","улица","Moro nesta rua.","places"],
+  ["loja","магазин","A loja está aberta.","places"],
+  ["mercado","рынок","Vou ao mercado.","places"],
+  ["escola","школа","As crianças vão à escola.","places"],
+  ["igreja","церковь","A igreja é antiga.","places"]
+];
+
+/* ============================================================
+   СОСТОЯНИЕ
+   ============================================================ */
+const SRS=[1,3,7,14,30,60,120];
+const STORAGE_KEY='ptbr_v5';
+
+let state={
+  words:[], decks:[],
+  progress:{},
+  streak:{last:null,count:0,best:0},
+  settings:{newLimit:20,activeDeck:'all'},
+  activity:{},
+  theme:'dark',
+  bg:'photo'
+};
+let queue=[],qi=0,cur=null,editingId=null;
+let wordsFilter='all';
+
+/* ============================================================
+   УТИЛИТЫ
+   ============================================================ */
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g,c=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+function today(){return new Date().toISOString().slice(0,10)}
+function daysBetween(a,b){return Math.floor((new Date(b)-new Date(a))/86400000)}
+function shuffle(a){
+  a=[...a];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function lastNDays(n){
+  const out=[];const d=new Date();
+  for(let i=n-1;i>=0;i--){
+    const x=new Date(d);x.setDate(x.getDate()-i);
+    out.push(x.toISOString().slice(0,10));
+  }
+  return out;
+}
+function deckById(id){return state.decks.find(d=>d.id===id)||null}
+
+/* ============================================================
+   ХРАНИЛИЩЕ
+   ============================================================ */
+function save(){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}
+  catch(e){alert('Ошибка сохранения: '+e.message)}
+}
+function load(){
+  try{
+    const r=localStorage.getItem(STORAGE_KEY);
+    if(r)state=Object.assign(state,JSON.parse(r));
+  }catch(e){}
+  state.words=Array.isArray(state.words)?state.words:[];
+  state.decks=Array.isArray(state.decks)?state.decks:[];
+  state.progress=state.progress||{};
+  state.streak=state.streak||{last:null,count:0,best:0};
+  state.settings=Object.assign({newLimit:20,activeDeck:'all'},state.settings||{});
+  state.activity=state.activity||{};
+  state.theme=state.theme||'dark';
+  state.bg=state.bg||'photo';
+  if(state.streak.best==null)state.streak.best=state.streak.count||0;
+
+  if(!state.decks.length)state.decks=STARTER_DECKS.map(d=>({...d}));
+  if(!state.words.length){
+    state.words=STARTER.map((w,i)=>({
+      id:'w'+i,word:w[0],translation:w[1],example:w[2],deckId:w[3]
+    }));
+  }
+  if(state.settings.activeDeck!=='all'&&!deckById(state.settings.activeDeck)){
+    state.settings.activeDeck='all';
+  }
+}
+
+/* ============================================================
+   ТЕМА И ФОН
+   ============================================================ */
+function applyTheme(){
+  const light = (state.bg==='light') || (state.bg==='photo' && state.theme==='light');
+  document.documentElement.setAttribute('data-theme', light?'light':'dark');
+  document.getElementById('themeBtn').textContent = light?'☀️':'🌙';
+
+  document.body.classList.toggle('bg-photo', state.bg==='photo');
+
+  document.querySelectorAll('.bg-opt').forEach(el=>{
+    el.classList.toggle('on', el.dataset.bg===state.bg);
+  });
+
+  const meta=document.querySelector('meta[name=theme-color]');
+  if(meta)meta.setAttribute('content', light?'#f5f7fa':'#0f1419');
+}
+function toggleTheme(){
+  // быстрое переключение светлой/тёмной поверх текущего фона
+  state.theme = state.theme==='dark' ? 'light' : 'dark';
+  if(state.bg==='dark') state.bg='light';
+  else if(state.bg==='light') state.bg='dark';
+  save();
+  applyTheme();
+}
+function setBg(v){
+  state.bg=v;
+  if(v==='light') state.theme='light';
+  if(v==='dark')  state.theme='dark';
+  save();
+  applyTheme();
+}
+
+/* ============================================================
+   SRS
+   ============================================================ */
+function isNew(id){return !state.progress[id]}
+function isDue(id){
+  const p=state.progress[id];
+  return !!(p&&p.dueDate&&p.dueDate<=today());
+}
+function isLearned(id){
+  const p=state.progress[id];
+  return !!(p&&p.level>=3);
+}
+function markActivity(){
+  const t=today();
+  state.activity[t]=(state.activity[t]||0)+1;
+}
+function updStreak(){
+  const t=today();
+  if(state.streak.last===t)return;
+  if(state.streak.last&&daysBetween(state.streak.last,t)===1)state.streak.count++;
+  else state.streak.count=1;
+  state.streak.last=t;
+  if(state.streak.count>state.streak.best)state.streak.best=state.streak.count;
+}
+function ansWord(id,q){
+  const p=state.progress[id]||{level:0,dueDate:today(),seen:0};
+  if(q===0){
+    p.level=0;p.dueDate=today();
+  }else if(q===1){
+    if(p.level>0)p.level--;
+    const d=new Date();d.setDate(d.getDate()+SRS[p.level]);
+    p.dueDate=d.toISOString().slice(0,10);
+  }else{
+    p.level=Math.min(SRS.length-1,p.level+1);
+    const d=new Date();d.setDate(d.getDate()+SRS[p.level]);
+    p.dueDate=d.toISOString().slice(0,10);
+  }
+  p.seen=(p.seen||0)+1;
+  state.progress[id]=p;
+  updStreak();markActivity();save();
+}
+
+/* ============================================================
+   ОЗВУЧКА
+   ============================================================ */
+if('speechSynthesis' in window){
+  speechSynthesis.onvoiceschanged=()=>{speechSynthesis.getVoices()};
+  speechSynthesis.getVoices();
+}
+function say(t){
+  if(!('speechSynthesis' in window)||!t)return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(t);
+  u.lang='pt-BR';u.rate=0.85;
+  const voices=speechSynthesis.getVoices();
+  const v=voices.find(x=>x.lang&&x.lang.toLowerCase().startsWith('pt'));
+  if(v)u.voice=v;
+  speechSynthesis.speak(u);
+}
+
+/* ============================================================
+   НАВИГАЦИЯ
+   ============================================================ */
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('on'));
+  const n=document.getElementById('n-'+id.replace('s-',''));
+  if(n)n.classList.add('on');
+  window.scrollTo(0,0);
+}
+
+/* ============================================================
+   ФИЛЬТРАЦИЯ ПО КОЛОДЕ
+   ============================================================ */
+function wordsInActiveDeck(){
+  const a=state.settings.activeDeck;
+  if(a==='all')return state.words;
+  return state.words.filter(w=>w.deckId===a);
+}
+function wordsInFilter(){
+  if(wordsFilter==='all')return state.words;
+  return state.words.filter(w=>w.deckId===wordsFilter);
+}
+/* ============================================================
+   ГЛАВНАЯ
+   ============================================================ */
+function renderHome(){
+  const scope=wordsInActiveDeck();
+  document.getElementById('nNew').textContent=scope.filter(w=>isNew(w.id)).length;
+  document.getElementById('nDue').textContent=scope.filter(w=>isDue(w.id)).length;
+  document.getElementById('nLearned').textContent=scope.filter(w=>isLearned(w.id)).length;
+  document.getElementById('nStreak').textContent=state.streak.count||0;
+  renderDeckBar();
+  renderMiniChart();
+}
+
+function renderDeckBar(){
+  const bar=document.getElementById('deckBar');
+  const a=state.settings.activeDeck;
+  const chips=[];
+  chips.push(
+    '<div class="deck-chip'+(a==='all'?' on':'')+'" onclick="setActiveDeck(\'all\')">'+
+    '<span class="deck-icon">📚</span>Все '+
+    '<span style="opacity:.7">('+state.words.length+')</span></div>'
+  );
+  state.decks.forEach(d=>{
+    const n=state.words.filter(w=>w.deckId===d.id).length;
+    chips.push(
+      '<div class="deck-chip'+(a===d.id?' on':'')+'" onclick="setActiveDeck(\''+d.id+'\')">'+
+      '<span class="deck-icon">'+esc(d.emoji||'🗂️')+'</span>'+esc(d.name)+
+      ' <span style="opacity:.7">('+n+')</span></div>'
+    );
+  });
+  bar.innerHTML=chips.join('');
+}
+
+function setActiveDeck(id){
+  state.settings.activeDeck=id;
+  save();
+  renderHome();
+}
+
+function renderMiniChart(){
+  const days=lastNDays(14);
+  const vals=days.map(d=>state.activity[d]||0);
+  const max=Math.max(1,...vals);
+  document.getElementById('miniChart').innerHTML=days.map((d,i)=>{
+    const h=Math.round(vals[i]/max*70);
+    const cls=vals[i]>0?'col has':'col';
+    return '<div class="'+cls+'" style="height:'+Math.max(2,h)+'px"><span>'+d.slice(8)+'</span></div>';
+  }).join('');
+}
+
+/* ============================================================
+   ОЧЕРЕДЬ ИЗУЧЕНИЯ
+   ============================================================ */
+function buildQ(mode){
+  const scope=wordsInActiveDeck();
+  if(mode==='review'){
+    const q=scope.filter(w=>isDue(w.id));
+    if(!q.length){alert('Нет слов к повторению в этой колоде');return null}
+    return shuffle(q);
+  }
+  const due=scope.filter(w=>isDue(w.id));
+  const limit=state.settings.newLimit||20;
+  const fresh=shuffle(scope.filter(w=>isNew(w.id))).slice(0,limit);
+  const q=[...due,...fresh];
+  if(!q.length){alert('Все слова в этой колоде выучены! Добавьте новые.');return null}
+  return shuffle(q);
+}
+
+function study(){
+  const q=buildQ('study');
+  if(!q)return;
+  queue=q;qi=0;
+  show('s-study');
+  renderStudy();
+}
+
+function review(){
+  const q=buildQ('review');
+  if(!q)return;
+  queue=q;qi=0;
+  show('s-study');
+  renderStudy();
+}
+
+function renderStudy(){
+  const content=document.getElementById('studyContent');
+  const done=document.getElementById('studyDone');
+  const reveal=document.getElementById('reveal');
+  const buttons=document.getElementById('buttons');
+  const bar=document.getElementById('bar');
+  const counter=document.getElementById('counter');
+
+  if(qi>=queue.length){
+    content.style.display='none';
+    done.style.display='block';
+    done.innerHTML='🎉 Готово!<br><br>Пройдено слов: '+queue.length;
+    reveal.style.display='none';
+    buttons.style.display='none';
+    bar.style.width='100%';
+    counter.textContent='';
+    return;
+  }
+  content.style.display='block';
+  done.style.display='none';
+
+  cur=queue[qi];
+  const isN=isNew(cur.id);
+  const tag=document.getElementById('tag');
+  tag.textContent=isN?'Новое':'Повторение';
+  tag.style.background=isN?'var(--accent)':'var(--warn)';
+
+  const d=deckById(cur.deckId);
+  const dt=document.getElementById('deckTag');
+  dt.textContent = d ? ((d.emoji||'🗂️')+' '+d.name) : 'Без колоды';
+
+  document.getElementById('w').textContent=cur.word;
+  document.getElementById('tr').textContent=cur.translation;
+  document.getElementById('ex').textContent=cur.example||'';
+  document.getElementById('ans').style.display='none';
+  reveal.style.display='block';
+  buttons.style.display='none';
+  bar.style.width=(qi/queue.length*100)+'%';
+  counter.textContent=(qi+1)+' / '+queue.length;
+}
+
+function reveal(){
+  document.getElementById('ans').style.display='block';
+  document.getElementById('reveal').style.display='none';
+  document.getElementById('buttons').style.display='block';
+}
+
+function ans(q){
+  ansWord(cur.id,q);
+  if(q===0)queue.push(cur); // вернуть в конец, чтобы повторить в этой сессии
+  qi++;
+  renderStudy();
+}
+
+/* ============================================================
+   СПИСОК СЛОВ
+   ============================================================ */
+function renderWords(){
+  renderWordsFilterBar();
+  const list=document.getElementById('list');
+  const items=wordsInFilter();
+  if(!items.length){
+    list.innerHTML='<div class="card center muted">Слов нет</div>';
+    return;
+  }
+  list.innerHTML=items.map(w=>{
+    const p=state.progress[w.id];
+    const status=!p?'новое':(p.level>=3?'✓ выучено':'повторение');
+    const due=p?(' · до '+p.dueDate):'';
+    const d=deckById(w.deckId);
+    const deckLabel=d?((d.emoji||'🗂️')+' '+d.name):'Без колоды';
+    return '<div class="word">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'+
+        '<div style="min-width:0;flex:1">'+
+          '<div style="font-weight:600;font-size:16px;word-break:break-word">'+esc(w.word)+'</div>'+
+          '<div style="color:var(--ok);font-size:14px;word-break:break-word">'+esc(w.translation)+'</div>'+
+          (w.example?'<div class="muted" style="margin-top:4px;font-style:italic">'+esc(w.example)+'</div>':'')+
+          '<div class="muted" style="margin-top:4px">'+esc(status+due)+'</div>'+
+          '<div class="muted" style="margin-top:2px">'+esc(deckLabel)+'</div>'+
+        '</div>'+
+        '<div style="display:flex;flex-direction:column;gap:4px">'+
+          '<button class="s" style="width:auto;padding:6px 10px;font-size:12px;margin:0" onclick="openEdit(\''+w.id+'\')">✎</button>'+
+          '<button class="s" style="width:auto;padding:6px 10px;font-size:12px;margin:0" onclick="delWord(\''+w.id+'\')">✕</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function renderWordsFilterBar(){
+  const bar=document.getElementById('wordsFilterBar');
+  const f=wordsFilter;
+  const chips=[];
+  chips.push(
+    '<div class="deck-chip'+(f==='all'?' on':'')+'" onclick="setWordsFilter(\'all\')">'+
+    '<span class="deck-icon">📚</span>Все '+
+    '<span style="opacity:.7">('+state.words.length+')</span></div>'
+  );
+  state.decks.forEach(d=>{
+    const n=state.words.filter(w=>w.deckId===d.id).length;
+    chips.push(
+      '<div class="deck-chip'+(f===d.id?' on':'')+'" onclick="setWordsFilter(\''+d.id+'\')">'+
+      '<span class="deck-icon">'+esc(d.emoji||'🗂️')+'</span>'+esc(d.name)+
+      ' <span style="opacity:.7">('+n+')</span></div>'
+    );
+  });
+  bar.innerHTML=chips.join('');
+}
+
+function setWordsFilter(id){
+  wordsFilter=id;
+  renderWords();
+}
+
+function delWord(id){
+  if(!confirm('Удалить слово?'))return;
+  state.words=state.words.filter(w=>w.id!==id);
+  delete state.progress[id];
+  save();
+  renderWords();
+}
+
+/* ============================================================
+   ДОБАВЛЕНИЕ / РЕДАКТИРОВАНИЕ СЛОВА
+   ============================================================ */
+function fillDeckSelect(selectedId){
+  const sel=document.getElementById('iD');
+  const opts=['<option value="">Без колоды</option>'];
+  state.decks.forEach(d=>{
+    opts.push('<option value="'+d.id+'"'+(selectedId===d.id?' selected':'')+'>'+
+      esc((d.emoji||'🗂️')+' '+d.name)+'</option>');
+  });
+  sel.innerHTML=opts.join('');
+}
+
+function openAdd(){
+  editingId=null;
+  document.getElementById('iW').value='';
+  document.getElementById('iT').value='';
+  document.getElementById('iE').value='';
+  const def = state.settings.activeDeck!=='all' ? state.settings.activeDeck : '';
+  fillDeckSelect(def);
+  show('s-add');
+}
+
+function openEdit(id){
+  const w=state.words.find(x=>x.id===id);
+  if(!w)return;
+  editingId=id;
+  document.getElementById('iW').value=w.word;
+  document.getElementById('iT').value=w.translation;
+  document.getElementById('iE').value=w.example||'';
+  fillDeckSelect(w.deckId||'');
+  show('s-add');
+}
+
+function saveWord(){
+  const w=document.getElementById('iW').value.trim();
+  const t=document.getElementById('iT').value.trim();
+  const e=document.getElementById('iE').value.trim();
+  const deckId=document.getElementById('iD').value||'';
+  if(!w||!t){alert('Заполните слово и перевод');return}
+
+  const dup=state.words.find(x=>x.word.toLowerCase()===w.toLowerCase()&&x.id!==editingId);
+  if(dup){alert('Это слово уже есть в словаре');return}
+
+  if(editingId){
+    const item=state.words.find(x=>x.id===editingId);
+    if(item){item.word=w;item.translation=t;item.example=e;item.deckId=deckId}
+  }else{
+    state.words.push({id:'u'+Date.now(),word:w,translation:t,example:e,deckId:deckId});
+  }
+  editingId=null;
+  save();
+  show('s-words');
+  renderWords();
+}
+
+/* ============================================================
+   УПРАВЛЕНИЕ КОЛОДАМИ
+   ============================================================ */
+function renderDecksManage(){
+  const list=document.getElementById('deckList');
+  if(!state.decks.length){
+    list.innerHTML='<div class="card center muted">Колод пока нет</div>';
+    return;
+  }
+  list.innerHTML=state.decks.map(d=>{
+    const n=state.words.filter(w=>w.deckId===d.id).length;
+    return '<div class="deck-manage">'+
+      '<div class="name"><span>'+esc(d.emoji||'🗂️')+'</span>'+esc(d.name)+
+      ' <span class="muted">('+n+')</span></div>'+
+      '<div class="actions">'+
+        '<button class="s" onclick="renameDeck(\''+d.id+'\')">✎</button>'+
+        '<button class="s" onclick="deleteDeck(\''+d.id+'\')">✕</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function createDeck(){
+  const name=document.getElementById('deckName').value.trim();
+  const emoji=document.getElementById('deckEmoji').value.trim()||'🗂️';
+  if(!name){alert('Введите название');return}
+  if(state.decks.some(d=>d.name.toLowerCase()===name.toLowerCase())){
+    alert('Колода с таким названием уже есть');return;
+  }
+  const id='d'+Date.now();
+  state.decks.push({id:id,name:name,emoji:emoji});
+  document.getElementById('deckName').value='';
+  document.getElementById('deckEmoji').value='';
+  save();
+  renderDecksManage();
+}
+
+function renameDeck(id){
+  const d=state.decks.find(x=>x.id===id);
+  if(!d)return;
+  const name=prompt('Новое название:',d.name);
+  if(name===null)return;
+  const nm=name.trim();
+  if(!nm)return;
+  const emoji=prompt('Эмодзи:',d.emoji||'🗂️');
+  d.name=nm;
+  d.emoji=(emoji===null?d.emoji:(emoji.trim()||'🗂️'));
+  save();
+  renderDecksManage();
+}
+
+function deleteDeck(id){
+  const d=state.decks.find(x=>x.id===id);
+  if(!d)return;
+  const n=state.words.filter(w=>w.deckId===id).length;
+  const msg = n>0
+    ? 'Удалить колоду «'+d.name+'»? '+n+' слов перейдут в «Без колоды».'
+    : 'Удалить колоду «'+d.name+'»?';
+  if(!confirm(msg))return;
+  state.words.forEach(w=>{if(w.deckId===id)w.deckId=''});
+  state.decks=state.decks.filter(x=>x.id!==id);
+  if(state.settings.activeDeck===id)state.settings.activeDeck='all';
+  if(wordsFilter===id)wordsFilter='all';
+  save();
+  renderDecksManage();
+}
+
+/* ============================================================
+   СТАТИСТИКА
+   ============================================================ */
+function renderStats(){
+  const days=lastNDays(14);
+  const vals=days.map(d=>state.activity[d]||0);
+  const max=Math.max(1,...vals);
+  document.getElementById('bigChart').innerHTML=days.map((d,i)=>{
+    const h=Math.round(vals[i]/max*70);
+    const cls=vals[i]>0?'col has':'col';
+    return '<div class="'+cls+'" style="height:'+Math.max(2,h)+'px"><span>'+d.slice(8)+'</span></div>';
+  }).join('');
+  document.getElementById('stTotal').textContent=state.words.length;
+  document.getElementById('stLearned').textContent=state.words.filter(w=>isLearned(w.id)).length;
+  document.getElementById('stBest').textContent=state.streak.best||0;
+  const totalAnswers=Object.values(state.activity).reduce((a,b)=>a+b,0);
+  document.getElementById('stAnswers').textContent=totalAnswers;
+}
+
+/* ============================================================
+   НАСТРОЙКИ
+   ============================================================ */
+function onLimitChange(){
+  const v=parseInt(document.getElementById('limitRange').value,10);
+  document.getElementById('limitVal').textContent=v;
+  state.settings.newLimit=v;
+  save();
+}
+function initSettings(){
+  const v=state.settings.newLimit||20;
+  document.getElementById('limitRange').value=v;
+  document.getElementById('limitVal').textContent=v;
+}
+
+/* ============================================================
+   ЭКСПОРТ / ИМПОРТ / СБРОС
+   ============================================================ */
+function exportData(){
+  const data=JSON.stringify(state,null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='ptbr-backup-'+today()+'.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importData(ev){
+  const file=ev.target.files&&ev.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      if(!data||typeof data!=='object'||!Array.isArray(data.words)){
+        alert('Неверный формат файла');return;
+      }
+      if(!confirm('Заменить текущие данные импортом?'))return;
+      state=Object.assign(state,data);
+      state.words=state.words||[];
+      state.decks=state.decks||[];
+      state.progress=state.progress||{};
+      state.streak=state.streak||{last:null,count:0,best:0};
+      state.settings=Object.assign({newLimit:20,activeDeck:'all'},state.settings||{});
+      state.activity=state.activity||{};
+      state.theme=state.theme||'dark';
+      state.bg=state.bg||'photo';
+      save();
+      applyTheme();
+      initSettings();
+      alert('Импорт выполнен');
+      show('s-home');
+      renderHome();
+    }catch(e){
+      alert('Ошибка чтения: '+e.message);
+    }
+  };
+  reader.readAsText(file);
+  ev.target.value='';
+}
+
+function resetAll(){
+  if(!confirm('Удалить все слова и прогресс?'))return;
+  if(!confirm('Точно? Это действие необратимо.'))return;
+  const theme=state.theme, bg=state.bg;
+  localStorage.removeItem(STORAGE_KEY);
+  state={words:[],decks:[],progress:{},streak:{last:null,count:0,best:0},
+         settings:{newLimit:20,activeDeck:'all'},activity:{},theme:theme,bg:bg};
+  load();
+  applyTheme();
+  initSettings();
+  show('s-home');
+  renderHome();
+}
+
+/* ============================================================
+   PWA (service worker)
+   ============================================================ */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+
+/* ============================================================
+   ЗАПУСК
+   ============================================================ */
+load();
+applyTheme();
+initSettings();
+renderHome();
+</script>
+</body>
+</html>
