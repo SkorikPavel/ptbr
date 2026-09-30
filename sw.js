@@ -1,4 +1,4 @@
-const CACHE='ptbr-v6';
+const CACHE='ptbr-v7';
 const ASSETS=[
   './',
   './index.html',
