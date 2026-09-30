@@ -65,8 +65,6 @@
   .deck-manage .name{font-weight:600;display:flex;align-items:center;gap:6px;min-width:0}
   .deck-manage .actions{display:flex;gap:6px;flex-shrink:0}
   .deck-manage button{width:auto;padding:6px 10px;font-size:12px;margin:0}
-
-  /* прогресс-кольцо дневной цели */
   .ring-wrap{display:flex;align-items:center;gap:16px}
   .ring{position:relative;width:96px;height:96px;flex-shrink:0}
   .ring svg{transform:rotate(-90deg)}
@@ -77,8 +75,8 @@
   .goal-info{flex:1}
   .goal-info .title{font-size:15px;font-weight:600;margin-bottom:4px}
   .goal-info .sub{font-size:12px;color:var(--muted)}
-
-  /* фон-пейзаж */
+  .mode-btn{background:var(--card2);color:var(--text);flex:1;margin:0;padding:10px;font-size:13px}
+  .mode-btn.on{background:var(--accent);color:#fff}
   body.bg-photo{
     background:
       linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,.75)),
@@ -95,11 +93,11 @@
   html[data-theme="light"] body.bg-photo .card,html[data-theme="light"] body.bg-photo nav{background:rgba(255,255,255,.82)}
   body.bg-photo header{background:rgba(15,20,25,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
   html[data-theme="light"] body.bg-photo header{background:rgba(255,255,255,.55)}
-
   .bg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
   .bg-opt{border:2px solid var(--border);border-radius:10px;padding:10px 6px;text-align:center;font-size:12px;cursor:pointer;background:var(--card2)}
   .bg-opt.on{border-color:var(--accent)}
   .bg-opt .emoji{font-size:20px;display:block;margin-bottom:4px}
+  .listen-opt{background:var(--card2);color:var(--text);margin:0;text-align:left}
 </style>
 </head><body>
 <header>
@@ -157,6 +155,13 @@
   <div class="screen" id="s-study">
     <div class="bar"><div id="bar"></div></div>
     <div class="muted center" id="counter" style="margin-bottom:8px"></div>
+
+    <div class="row" style="margin-bottom:8px">
+      <button class="mode-btn on" id="mCards" onclick="setMode('cards')">🗂 Карточки</button>
+      <button class="mode-btn" id="mListen" onclick="setMode('listen')">🎧 Слушать</button>
+      <button class="mode-btn" id="mType" onclick="setMode('type')">⌨️ Ввод</button>
+    </div>
+
     <div class="card">
       <div id="studyContent">
         <div class="center">
@@ -174,18 +179,25 @@
       </div>
       <div id="studyDone" style="display:none;text-align:center;padding:40px 20px;color:var(--muted)"></div>
     </div>
-        <div id="studyModes" style="display:flex;gap:6px;margin-bottom:8px">
-      <button class="s" id="mCards" onclick="setMode('cards')" style="margin:0;font-size:13px;padding:10px">🗂 Карточки</button>
-      <button class="s" id="mListen" onclick="setMode('listen')" style="margin:0;font-size:13px;padding:10px">🎧 Аудирование</button>
-      <button class="s" id="mType" onclick="setMode('type')" style="margin:0;font-size:13px;padding:10px">⌨️ Ввод</button>
-    </div>
 
-    <button class="g" id="reveal" onclick="reveal()">Показать ответ</button>
+    <!-- Режим Карточки -->
+    <div id="cardsBox">
+      <button class="g" id="reveal" onclick="reveal()">Показать ответ</button>
+      <div id="buttons" style="display:none">
+        <div class="row">
+          <button class="r" onclick="ans(0)">Не знаю</button>
+          <button class="w" onclick="ans(1)">Сложно</button>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <button onclick="ans(2)">Норм</button>
+          <button class="g" onclick="ans(3)">Легко</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Режим Аудирование -->
     <div id="listenBox" style="display:none">
-      <div id="listenWord" class="muted center" style="margin-bottom:8px">Нажмите 🔊, чтобы услышать</div>
-      <button class="s" onclick="say(cur&&cur.word)" style="margin-bottom:8px">🔊 Прослушать</button>
+      <button class="s" onclick="say(cur&&cur.word)">🔊 Прослушать ещё раз</button>
       <div id="listenOptions" style="display:grid;gap:8px"></div>
     </div>
 
@@ -193,19 +205,9 @@
     <div id="typeBox" style="display:none">
       <input id="typeInput" placeholder="Введите перевод…" autocomplete="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter')typeCheck()">
       <button class="g" onclick="typeCheck()">Проверить</button>
-      <div id="typeFeedback" class="center" style="min-height:24px;font-weight:600"></div>
+      <div id="typeFeedback" class="center" style="min-height:24px;font-weight:600;margin-top:8px"></div>
     </div>
 
-    <div id="buttons" style="display:none">
-      <div class="row">
-        <button class="r" onclick="ans(0)">Не знаю</button>
-        <button class="w" onclick="ans(1)">Сложно</button>
-      </div>
-      <div class="row" style="margin-top:8px">
-        <button onclick="ans(2)">Норм</button>
-        <button class="g" onclick="ans(3)">Легко</button>
-      </div>
-    </div>
     <button class="s" style="margin-top:12px;font-size:13px" onclick="show('s-home');renderHome()">← Выйти</button>
   </div>
 
@@ -287,28 +289,26 @@
           <span class="emoji">☀️</span>Светлый
         </div>
       </div>
-      <div class="muted" style="margin-top:8px">
-        Тема автоматически меняется по времени суток (светлая днём, тёмная ночью).
-      </div>
     </div>
     <div class="card">
       <div class="settings-row">
         <label>Тема по времени суток</label>
         <input type="checkbox" id="autoThemeChk" onchange="onAutoThemeChange()" style="width:auto;margin:0">
       </div>
-    </div>    <div class="card">
+    </div>
+    <div class="card">
       <div class="settings-row">
         <label>Напоминание раз в день</label>
         <input type="checkbox" id="reminderChk" onchange="onReminderChange()" style="width:auto;margin:0">
       </div>
       <div class="settings-row">
-        <label>Время напоминания</label>
+        <label>Время</label>
         <input type="time" id="reminderTime" onchange="onReminderTimeChange()" style="width:auto;margin:0;padding:6px">
       </div>
-      <div class="muted" style="margin-top:4px">
-        Уведомление придёт, только если приложение открыто или установлено как PWA.
-      </div>
       <button class="s" onclick="testReminder()" style="margin-top:8px">🔔 Проверить уведомление</button>
+      <div class="muted" style="margin-top:6px">
+        Уведомление придёт, если приложение открыто или установлено как PWA.
+      </div>
     </div>
     <div class="card">
       <div class="muted" style="margin-bottom:8px">Данные</div>
@@ -458,20 +458,23 @@ const STARTER=[
 ];
 
 const SRS=[1,3,7,14,30,60,120];
-const STORAGE_KEY='ptbr_v6';
+const STORAGE_KEY='ptbr_v7';
 
 let state={
   words:[], decks:[],
   progress:{},
   streak:{last:null,count:0,best:0},
-  settings:{newLimit:20,activeDeck:'all',dailyGoal:20,autoTheme:true},
+  settings:{newLimit:20,activeDeck:'all',dailyGoal:20,autoTheme:true,reminder:false,reminderTime:'19:00',lastReminder:null},
   activity:{},
   daily:{date:null,count:0},
   theme:'dark',
-  bg:'photo'
+  bg:'photo',
+  mode:'cards'
 };
 let queue=[],qi=0,cur=null,editingId=null;
 let wordsFilter='all';
+let currentMode='cards';
+let reminderTimer=null;
 
 function esc(s){
   return String(s==null?'':s).replace(/[&<>"']/g,c=>({
@@ -489,6 +492,7 @@ function lastNDays(n){
 function deckById(id){return state.decks.find(d=>d.id===id)||null}
 
 function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}catch(e){alert('Ошибка сохранения: '+e.message)}}
+
 function load(){
   try{
     const r=localStorage.getItem(STORAGE_KEY);
@@ -498,11 +502,13 @@ function load(){
   state.decks=Array.isArray(state.decks)?state.decks:[];
   state.progress=state.progress||{};
   state.streak=state.streak||{last:null,count:0,best:0};
-  state.settings=Object.assign({newLimit:20,activeDeck:'all',dailyGoal:20,autoTheme:true},state.settings||{});
+  state.settings=Object.assign({newLimit:20,activeDeck:'all',dailyGoal:20,autoTheme:true,reminder:false,reminderTime:'19:00',lastReminder:null},state.settings||{});
   state.activity=state.activity||{};
   state.daily=state.daily||{date:null,count:0};
   state.theme=state.theme||'dark';
   state.bg=state.bg||'photo';
+  state.mode=state.mode||'cards';
+  currentMode=state.mode||'cards';
   if(state.streak.best==null)state.streak.best=state.streak.count||0;
   if(!state.decks.length)state.decks=STARTER_DECKS.map(d=>({...d}));
   if(!state.words.length){
@@ -568,9 +574,7 @@ function markActivity(){
 
 function markDaily(){
   const t=today();
-  if(state.daily.date!==t){
-    state.daily={date:t,count:0};
-  }
+  if(state.daily.date!==t)state.daily={date:t,count:0};
   state.daily.count++;
   renderGoalRing();
 }
@@ -638,12 +642,10 @@ function wordsInFilter(){
   const pct=Math.min(1,count/goal);
   const circumference=2*Math.PI*42;
   const offset=circumference*(1-pct);
-
   const fg=document.getElementById('ringFg');
   const now=document.getElementById('ringNow');
   const g=document.getElementById('ringGoal');
   const sub=document.getElementById('goalSub');
-
   if(!fg)return;
   fg.setAttribute('stroke-dashoffset',offset.toFixed(1));
   now.textContent=count;
@@ -711,18 +713,29 @@ function buildQ(mode){
   return shuffle(q);
 }
 
-function study(){
-  const q=buildQ('study');if(!q)return;
-  queue=q;qi=0;show('s-study');renderStudy();
-}
-function review(){
-  const q=buildQ('review');if(!q)return;
-  queue=q;qi=0;show('s-study');renderStudy();
+function study(){const q=buildQ('study');if(!q)return;queue=q;qi=0;show('s-study');renderStudy()}
+function review(){const q=buildQ('review');if(!q)return;queue=q;qi=0;show('s-study');renderStudy()}
+
+function setMode(m){
+  currentMode=m;
+  state.mode=m;
+  save();
+  const map={cards:'mCards',listen:'mListen',type:'mType'};
+  Object.values(map).forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.classList.remove('on');
+  });
+  const curBtn=document.getElementById(map[m]);
+  if(curBtn)curBtn.classList.add('on');
+  if(document.getElementById('s-study').classList.contains('on'))renderStudy();
 }
 
 function renderStudy(){
   const content=document.getElementById('studyContent');
   const done=document.getElementById('studyDone');
+  const cardsBox=document.getElementById('cardsBox');
+  const listenBox=document.getElementById('listenBox');
+  const typeBox=document.getElementById('typeBox');
   const reveal=document.getElementById('reveal');
   const buttons=document.getElementById('buttons');
   const bar=document.getElementById('bar');
@@ -732,8 +745,9 @@ function renderStudy(){
     content.style.display='none';
     done.style.display='block';
     done.innerHTML='🎉 Готово!<br><br>Пройдено слов: '+queue.length;
-    reveal.style.display='none';
-    buttons.style.display='none';
+    cardsBox.style.display='none';
+    listenBox.style.display='none';
+    typeBox.style.display='none';
     bar.style.width='100%';
     counter.textContent='';
     return;
@@ -755,10 +769,29 @@ function renderStudy(){
   document.getElementById('tr').textContent=cur.translation;
   document.getElementById('ex').textContent=cur.example||'';
   document.getElementById('ans').style.display='none';
-  reveal.style.display='block';
-  buttons.style.display='none';
   bar.style.width=(qi/queue.length*100)+'%';
   counter.textContent=(qi+1)+' / '+queue.length;
+
+  cardsBox.style.display='none';
+  listenBox.style.display='none';
+  typeBox.style.display='none';
+  reveal.style.display='none';
+  buttons.style.display='none';
+
+  if(currentMode==='cards'){
+    cardsBox.style.display='block';
+    reveal.style.display='block';
+  }else if(currentMode==='listen'){
+    listenBox.style.display='block';
+    renderListenOptions();
+    setTimeout(()=>say(cur.word),300);
+  }else if(currentMode==='type'){
+    typeBox.style.display='block';
+    const inp=document.getElementById('typeInput');
+    inp.value='';
+    document.getElementById('typeFeedback').textContent='';
+    setTimeout(()=>inp.focus(),80);
+  }
 }
 
 function reveal(){
@@ -771,6 +804,63 @@ function ans(q){
   ansWord(cur.id,q);
   if(q===0)queue.push(cur);
   qi++;renderStudy();
+}
+
+function renderListenOptions(){
+  const box=document.getElementById('listenOptions');
+  const correct=cur.translation;
+  const pool=state.words.filter(w=>w.translation!==correct);
+  const wrongs=shuffle(pool).slice(0,3).map(w=>w.translation);
+  while(wrongs.length<3)wrongs.push('—');
+  const opts=shuffle([correct,...wrongs]);
+  box.innerHTML=opts.map(t=>{
+    const safe=esc(t);
+    return '<button class="listen-opt" onclick="listenAnswer(this,\''+safe.replace(/'/g,"\\'")+'\')">'+safe+'</button>';
+  }).join('');
+}
+
+function listenAnswer(btn,value){
+  if(btn.disabled)return;
+  const correct=cur.translation;
+  document.querySelectorAll('#listenOptions button').forEach(b=>b.disabled=true);
+  if(value===correct){
+    btn.style.background='var(--ok)';
+    setTimeout(()=>ans(3),500);
+  }else{
+    btn.style.background='var(--bad)';
+    document.querySelectorAll('#listenOptions button').forEach(b=>{
+      if(b.textContent===correct)b.style.background='var(--ok)';
+    });
+    setTimeout(()=>ans(0),900);
+  }
+}
+
+function normalize(s){
+  return String(s||'').trim().toLowerCase()
+    .replace(/ё/g,'е')
+    .replace(/[.,!?;:]/g,'')
+    .replace(/\s+/g,' ');
+}
+
+function typeCheck(){
+  const val=document.getElementById('typeInput').value;
+  const fb=document.getElementById('typeFeedback');
+  const correct=cur.translation;
+  if(!val.trim()){
+    fb.textContent='Введите перевод';
+    fb.style.color='var(--warn)';
+    return;
+  }
+  const ok=normalize(val)===normalize(correct);
+  if(ok){
+    fb.textContent='✅ Верно!';
+    fb.style.color='var(--ok)';
+    setTimeout(()=>ans(3),500);
+  }else{
+    fb.textContent='❌ Правильно: '+correct;
+    fb.style.color='var(--bad)';
+    setTimeout(()=>ans(0),1500);
+  }
 }
 
 function renderWords(){
@@ -866,10 +956,8 @@ function saveWord(){
   const e=document.getElementById('iE').value.trim();
   const deckId=document.getElementById('iD').value||'';
   if(!w||!t){alert('Заполните слово и перевод');return}
-
   const dup=state.words.find(x=>x.word.toLowerCase()===w.toLowerCase()&&x.id!==editingId);
   if(dup){alert('Это слово уже есть в словаре');return}
-
   if(editingId){
     const item=state.words.find(x=>x.id===editingId);
     if(item){item.word=w;item.translation=t;item.example=e;item.deckId=deckId}
@@ -982,6 +1070,84 @@ function initSettings(){
   document.getElementById('goalVal').textContent=g;
   const chk=document.getElementById('autoThemeChk');
   if(chk)chk.checked=!!state.settings.autoTheme;
+  const rchk=document.getElementById('reminderChk');
+  if(rchk)rchk.checked=!!state.settings.reminder;
+  const rinp=document.getElementById('reminderTime');
+  if(rinp)rinp.value=state.settings.reminderTime||'19:00';
+}
+
+/* ===== НАПОМИНАНИЯ ===== */
+function onReminderChange(){
+  const chk=document.getElementById('reminderChk');
+  const on=!!chk.checked;
+  if(on && !('Notification' in window)){
+    alert('Браузер не поддерживает уведомления');
+    chk.checked=false;
+    return;
+  }
+  if(on){
+    Notification.requestPermission().then(p=>{
+      if(p!=='granted'){
+        alert('Разрешение не получено');
+        chk.checked=false;
+        state.settings.reminder=false;
+        save();
+        return;
+      }
+      state.settings.reminder=true;
+      save();
+      scheduleReminderCheck();
+    });
+  }else{
+    state.settings.reminder=false;
+    save();
+  }
+}
+
+function onReminderTimeChange(){
+  const inp=document.getElementById('reminderTime');
+  state.settings.reminderTime=inp.value||'19:00';
+  save();
+}
+
+function testReminder(){
+  if(!('Notification' in window)){
+    alert('Уведомления не поддерживаются');
+    return;
+  }
+  Notification.requestPermission().then(p=>{
+    if(p==='granted'){
+      new Notification('🇧🇷 Português BR',{body:'Тестовое напоминание — всё работает!'});
+    }else{
+      alert('Разрешение не получено');
+    }
+  });
+}
+
+function scheduleReminderCheck(){
+  if(reminderTimer)clearInterval(reminderTimer);
+  reminderTimer=setInterval(checkReminder,60000);
+  checkReminder();
+}
+
+function checkReminder(){
+  if(!state.settings.reminder)return;
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  const now=new Date();
+  const t=now.toISOString().slice(0,10);
+  if(state.settings.lastReminder===t)return;
+  const parts=(state.settings.reminderTime||'19:00').split(':').map(n=>parseInt(n,10));
+  const targetMin=(parts[0]||0)*60+(parts[1]||0);
+  const curMin=now.getHours()*60+now.getMinutes();
+  if(curMin<targetMin)return;
+  const goal=state.settings.dailyGoal||20;
+  const done=(state.daily.date===t)?state.daily.count:0;
+  if(done>=goal)return;
+  new Notification('🇧🇷 Português BR',{
+    body:'Не забудьте про дневную цель: '+done+' из '+goal+'. Vamos lá!'
+  });
+  state.settings.lastReminder=t;
+  save();
 }
 
 function exportData(){
@@ -1011,13 +1177,15 @@ function importData(ev){
       state.decks=state.decks||[];
       state.progress=state.progress||{};
       state.streak=state.streak||{last:null,count:0,best:0};
-      state.settings=Object.assign({newLimit:20,activeDeck:'all',dailyGoal:20,autoTheme:true},state.settings||{});
+      state.settings=Object.assign({newLimit:20,activeDeck:'all',dailyGoal:20,autoTheme:true,reminder:false,reminderTime:'19:00',lastReminder:null},state.settings||{});
       state.activity=state.activity||{};
       state.daily=state.daily||{date:null,count:0};
       state.theme=state.theme||'dark';
       state.bg=state.bg||'photo';
+      state.mode=state.mode||'cards';
+      currentMode=state.mode;
       save();
-      applyTheme();initSettings();
+      applyTheme();initSettings();setMode(currentMode);
       alert('Импорт выполнен');
       show('s-home');renderHome();
     }catch(e){
@@ -1034,9 +1202,10 @@ function resetAll(){
   const theme=state.theme, bg=state.bg, auto=state.settings.autoTheme;
   localStorage.removeItem(STORAGE_KEY);
   state={words:[],decks:[],progress:{},streak:{last:null,count:0,best:0},
-         settings:{newLimit:20,activeDeck:'all',dailyGoal:20,autoTheme:auto},
-         activity:{},daily:{date:null,count:0},theme:theme,bg:bg};
-  load();applyTheme();initSettings();
+         settings:{newLimit:20,activeDeck:'all',dailyGoal:20,autoTheme:auto,reminder:false,reminderTime:'19:00',lastReminder:null},
+         activity:{},daily:{date:null,count:0},theme:theme,bg:bg,mode:'cards'};
+  currentMode='cards';
+  load();applyTheme();initSettings();setMode(currentMode);
   show('s-home');renderHome();
 }
 
@@ -1046,10 +1215,13 @@ if('serviceWorker' in navigator){
   });
 }
 
+/* ===== ЗАПУСК ===== */
 load();
 applyTheme();
 initSettings();
+setMode(currentMode);
 renderHome();
+if(state.settings.reminder)scheduleReminderCheck();
 </script>
 </body>
 </html>
