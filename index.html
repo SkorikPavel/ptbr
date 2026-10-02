@@ -228,10 +228,23 @@
     </div>
   </div>
 
-  <div class="screen" id="s-words">
+    <div class="screen" id="s-words">
     <div class="row" style="margin-bottom:8px">
       <button class="g" onclick="openAdd()">+ Добавить</button>
       <button class="s" onclick="show('s-import')">📋 Импорт списка</button>
+    </div>
+    <div class="card" style="padding:10px">
+      <div style="position:relative">
+        <input id="searchInput" placeholder="🔎 Поиск по слову, переводу, примеру…"
+               autocomplete="off" autocapitalize="off" spellcheck="false"
+               style="margin:0;padding-right:38px"
+               oninput="onSearchInput()">
+        <button id="searchClear" onclick="clearSearch()"
+                style="display:none;position:absolute;right:6px;top:50%;transform:translateY(-50%);
+                       width:28px;height:28px;padding:0;border-radius:50%;margin:0;
+                       background:var(--border);color:var(--text);font-size:14px;line-height:1">✕</button>
+      </div>
+      <div class="muted" id="searchCount" style="margin-top:6px;display:none"></div>
     </div>
     <div class="card" style="padding:10px">
       <div class="deck-bar" id="wordsFilterBar"></div>
