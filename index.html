@@ -109,6 +109,7 @@
   .deck-stats-bar div{height:100%;background:var(--ok)}
   .note-box{background:var(--card2);border-radius:8px;padding:8px 10px;margin-top:8px;font-size:13px;border-left:3px solid var(--accent)}
   .skip-btn{background:var(--card2);color:var(--muted)}
+  .search-clear{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:28px;height:28px;padding:0;border-radius:50%;margin:0;background:var(--border);color:var(--text);font-size:14px;line-height:1}
 </style>
 </head><body>
 <header>
@@ -155,7 +156,7 @@
     <div class="card">
       <button class="g" onclick="study()">📖 Учить слова</button>
       <button onclick="review()">🔄 Повторить</button>
-      <button class="s" onclick="show('s-words');renderWords()">📚 Все слова</button>
+      <button class="s" onclick="openWordsScreen()">📚 Все слова</button>
       <button class="s" onclick="show('s-stats');renderStats()">📊 Статистика</button>
       <button class="s" onclick="show('s-decks');renderDecksManage()">🗂️ Колоды</button>
       <button class="s" onclick="show('s-settings')">⚙️ Настройки</button>
@@ -228,7 +229,7 @@
     </div>
   </div>
 
-    <div class="screen" id="s-words">
+  <div class="screen" id="s-words">
     <div class="row" style="margin-bottom:8px">
       <button class="g" onclick="openAdd()">+ Добавить</button>
       <button class="s" onclick="show('s-import')">📋 Импорт списка</button>
@@ -239,10 +240,8 @@
                autocomplete="off" autocapitalize="off" spellcheck="false"
                style="margin:0;padding-right:38px"
                oninput="onSearchInput()">
-        <button id="searchClear" onclick="clearSearch()"
-                style="display:none;position:absolute;right:6px;top:50%;transform:translateY(-50%);
-                       width:28px;height:28px;padding:0;border-radius:50%;margin:0;
-                       background:var(--border);color:var(--text);font-size:14px;line-height:1">✕</button>
+        <button id="searchClear" class="search-clear" onclick="clearSearch()"
+                style="display:none">✕</button>
       </div>
       <div class="muted" id="searchCount" style="margin-top:6px;display:none"></div>
     </div>
@@ -437,8 +436,9 @@ comer;есть;;🍽️" style="min-height:180px"></textarea>
 <nav>
   <button class="on" id="n-home" onclick="show('s-home');renderHome()">🏠 Главная</button>
   <button id="n-study" onclick="study()">📖 Учить</button>
-  <button id="n-words" onclick="show('s-words');renderWords()">📚 Слова</button>
-</nav><script>
+  <button id="n-words" onclick="openWordsScreen()">📚 Слова</button>
+</nav>
+<script>
 const STARTER_DECKS=[
   {id:'food',      name:'Еда',           emoji:'🍽️'},
   {id:'clothes',   name:'Одежда',        emoji:'👕'},
@@ -570,7 +570,7 @@ const STARTER=[
 ];
 
 const SRS=[1,3,7,14,30,60,120];
-const STORAGE_KEY='ptbr_v9';
+const STORAGE_KEY='ptbr_v10';
 
 let state={
   words:[], decks:[],
@@ -600,6 +600,7 @@ let state={
 };
 let queue=[],qi=0,cur=null,editingId=null;
 let wordsFilter='all';
+let searchQuery='';
 let currentMode='cards';
 let reminderTimer=null;
 let sysThemeMQ=null;
@@ -812,9 +813,47 @@ function clearDecks(){
   state.settings.activeDecks=['all'];
   save();renderHome();
 }
+
+/* ===== ПОИСК ===== */
+function normalizeSearch(s){
+  return String(s||'')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .trim();
+}
 function wordsInFilter(){
-  if(wordsFilter==='all')return state.words;
-  return state.words.filter(w=>w.deckId===wordsFilter);
+  let list=state.words;
+  if(wordsFilter!=='all'){
+    list=list.filter(w=>w.deckId===wordsFilter);
+  }
+  const q=normalizeSearch(searchQuery);
+  if(!q)return list;
+  return list.filter(w=>{
+    const hay=normalizeSearch(
+      (w.word||'')+' '+(w.translation||'')+' '+
+      (w.example||'')+' '+(w.note||'')+' '+(w.emoji||'')
+    );
+    const tokens=q.split(/\s+/).filter(Boolean);
+    return tokens.every(t=>hay.includes(t));
+  });
+}
+function onSearchInput(){
+  searchQuery=document.getElementById('searchInput').value||'';
+  const clr=document.getElementById('searchClear');
+  if(clr)clr.style.display=searchQuery?'block':'none';
+  renderWords();
+}
+function clearSearch(){
+  searchQuery='';
+  const inp=document.getElementById('searchInput');
+  if(inp)inp.value='';
+  const clr=document.getElementById('searchClear');
+  if(clr)clr.style.display='none';
+  renderWords();
+}
+function openWordsScreen(){
+  show('s-words');
+  renderWords();
 }function renderGoalRing(){
   const goal=state.settings.dailyGoal||20;
   const t=today();
@@ -1088,10 +1127,27 @@ function renderWords(){
   renderWordsFilterBar();
   const list=document.getElementById('list');
   const items=wordsInFilter();
+  const cnt=document.getElementById('searchCount');
+
+  if(cnt){
+    if(searchQuery){
+      cnt.style.display='block';
+      cnt.textContent='Найдено: '+items.length+' из '+state.words.length;
+    }else{
+      cnt.style.display='none';
+    }
+  }
+
   if(!items.length){
-    list.innerHTML='<div class="card center muted">Слов нет</div>';
+    if(searchQuery){
+      list.innerHTML='<div class="card center muted">🔎 Ничего не найдено<br>'+
+        '<span class="muted" style="font-size:11px">Попробуйте другой запрос</span></div>';
+    }else{
+      list.innerHTML='<div class="card center muted">Слов нет</div>';
+    }
     return;
   }
+
   list.innerHTML=items.map(w=>{
     const p=state.progress[w.id];
     const status=!p?'новое':(p.level>=3?'✓ выучено':'повторение');
