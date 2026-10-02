@@ -33,9 +33,11 @@
   button.s{background:var(--card2);color:var(--text)}
   .row{display:flex;gap:8px}.row button{margin-bottom:0}
   .big{font-size:32px;font-weight:700;text-align:center;margin:16px 0}
+  .big-sm{font-size:22px;font-weight:600;text-align:center;margin:8px 0;color:var(--accent)}
   .tr{font-size:22px;color:var(--ok);text-align:center;margin:8px 0}
   .ex{font-size:14px;color:var(--muted);font-style:italic;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
-  input,select{width:100%;background:var(--card2);color:var(--text);border:1px solid var(--border);padding:12px;border-radius:10px;font-size:15px;margin-bottom:8px;font-family:inherit}
+  input,select,textarea{width:100%;background:var(--card2);color:var(--text);border:1px solid var(--border);padding:12px;border-radius:10px;font-size:15px;margin-bottom:8px;font-family:inherit}
+  textarea{resize:vertical;min-height:80px}
   .bar{height:6px;background:var(--card2);border-radius:3px;overflow:hidden;margin-bottom:16px}
   .bar div{height:100%;background:var(--ok);width:0;transition:width .3s}
   .screen{display:none}.screen.on{display:block}
@@ -56,8 +58,9 @@
   .settings-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px}
   .settings-row label{font-size:14px;flex:1}
   .settings-row input[type=range]{margin:0;padding:0;flex:1;max-width:160px}
-  .deck-chip{display:inline-flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--border);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
+  .deck-chip{display:inline-flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--border);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;white-space:nowrap;user-select:none}
   .deck-chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .deck-chip .check{font-size:12px;opacity:.7}
   .deck-bar{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:-4px}
   .deck-bar::-webkit-scrollbar{display:none}
   .deck-icon{font-size:15px}
@@ -98,6 +101,14 @@
   .bg-opt.on{border-color:var(--accent)}
   .bg-opt .emoji{font-size:20px;display:block;margin-bottom:4px}
   .listen-opt{background:var(--card2);color:var(--text);margin:0;text-align:left}
+  .emoji-big{font-size:56px;text-align:center;margin:4px 0}
+  .reverse-badge{display:inline-block;padding:2px 8px;border-radius:6px;background:var(--warn);color:#fff;font-size:11px;margin-left:6px}
+  .deck-stats-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px}
+  .deck-stats-row:last-child{border-bottom:none}
+  .deck-stats-bar{height:6px;background:var(--card2);border-radius:3px;overflow:hidden;width:80px;margin-left:8px}
+  .deck-stats-bar div{height:100%;background:var(--ok)}
+  .note-box{background:var(--card2);border-radius:8px;padding:8px 10px;margin-top:8px;font-size:13px;border-left:3px solid var(--accent)}
+  .skip-btn{background:var(--card2);color:var(--muted)}
 </style>
 </head><body>
 <header>
@@ -135,7 +146,10 @@
       </div>
     </div>
     <div class="card">
-      <div class="label">Колода</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div class="label" style="margin:0">Колоды (можно несколько)</div>
+        <button class="s" style="width:auto;padding:4px 10px;font-size:12px;margin:0" onclick="clearDecks()">Сбросить</button>
+      </div>
       <div class="deck-bar" id="deckBar"></div>
     </div>
     <div class="card">
@@ -168,13 +182,16 @@
           <span class="tag" id="tag">Новое</span>
           <span class="tag" id="deckTag" style="background:var(--card2);color:var(--muted);margin-left:6px"></span>
         </div>
+        <div class="emoji-big" id="emojiBig" style="display:none"></div>
         <div class="big" id="w"></div>
+        <div class="big-sm" id="wReverse" style="display:none"></div>
         <div class="center" style="margin-bottom:8px">
-          <button class="s" style="width:auto;padding:8px 16px" onclick="say(document.getElementById('w').textContent)">🔊</button>
+          <button class="s" style="width:auto;padding:8px 16px" onclick="say(cur&&cur.word)">🔊</button>
         </div>
         <div id="ans" style="display:none">
           <div class="tr" id="tr"></div>
           <div class="ex" id="ex"></div>
+          <div class="note-box" id="noteBox" style="display:none"></div>
         </div>
       </div>
       <div id="studyDone" style="display:none;text-align:center;padding:40px 20px;color:var(--muted)"></div>
@@ -208,11 +225,17 @@
       <div id="typeFeedback" class="center" style="min-height:24px;font-weight:600;margin-top:8px"></div>
     </div>
 
-    <button class="s" style="margin-top:12px;font-size:13px" onclick="show('s-home');renderHome()">← Выйти</button>
+    <div class="row" style="margin-top:12px">
+      <button class="skip-btn" onclick="skipCard()">⏭ Пропустить</button>
+      <button class="s" onclick="show('s-home');renderHome()">← Выйти</button>
+    </div>
   </div>
 
   <div class="screen" id="s-words">
-    <button class="g" onclick="openAdd()">+ Добавить слово</button>
+    <div class="row" style="margin-bottom:8px">
+      <button class="g" onclick="openAdd()">+ Добавить</button>
+      <button class="s" onclick="show('s-import')">📋 Импорт списка</button>
+    </div>
     <div class="card" style="padding:10px">
       <div class="deck-bar" id="wordsFilterBar"></div>
     </div>
@@ -224,13 +247,35 @@
     <div class="card">
       <input id="iW" placeholder="Слово (pt-BR)">
       <input id="iT" placeholder="Перевод (ru)">
-      <input id="iE" placeholder="Пример">
+      <input id="iE" placeholder="Пример (необязательно)">
+      <input id="iEmoji" placeholder="Эмодзи-иллюстрация (необязательно)" maxlength="4">
+      <textarea id="iNote" placeholder="Заметка (необязательно)"></textarea>
       <label class="label">Колода</label>
       <select id="iD"></select>
       <div class="row" style="margin-top:8px">
         <button class="s" onclick="show('s-words');renderWords()">Отмена</button>
         <button class="g" onclick="saveWord()">Сохранить</button>
       </div>
+    </div>
+  </div>
+
+  <div class="screen" id="s-import">
+    <div class="card">
+      <div class="label">Вставьте список слов</div>
+      <div class="muted" style="margin-bottom:8px">
+        Одна строка — одно слово. Формат: <b>palavra;перевод;пример;эмодзи</b><br>
+        Разделители: <b>;</b> или <b>табуляция</b> или <b>запятая</b>. Пример и эмодзи — необязательны.
+      </div>
+      <textarea id="importText" placeholder="casa;дом;Minha casa é grande.;🏠
+água;вода;Quero água.;💧
+comer;есть;;🍽️" style="min-height:180px"></textarea>
+      <label class="label">Колода для новых слов</label>
+      <select id="importDeck"></select>
+      <div class="row" style="margin-top:8px">
+        <button class="s" onclick="show('s-words');renderWords()">Отмена</button>
+        <button class="g" onclick="importWordsText()">Импортировать</button>
+      </div>
+      <div class="muted" style="margin-top:8px" id="importResult"></div>
     </div>
   </div>
 
@@ -257,6 +302,10 @@
         <div class="stat"><b id="stBest">0</b><span>Лучший streak</span></div>
         <div class="stat"><b id="stAnswers">0</b><span>Всего ответов</span></div>
       </div>
+    </div>
+    <div class="card">
+      <div class="label">Прогресс по колодам</div>
+      <div id="deckStats" style="margin-top:8px"></div>
     </div>
     <button class="s" onclick="show('s-home');renderHome()">← Назад</button>
   </div>
@@ -295,6 +344,16 @@
         <label>Тема по времени суток</label>
         <input type="checkbox" id="autoThemeChk" onchange="onAutoThemeChange()" style="width:auto;margin:0">
       </div>
+      <div class="settings-row">
+        <label>Тема по системе телефона</label>
+        <input type="checkbox" id="sysThemeChk" onchange="onSysThemeChange()" style="width:auto;margin:0">
+      </div>
+    </div>
+    <div class="card">
+      <div class="settings-row">
+        <label>Обратный режим (RU → PT)</label>
+        <input type="checkbox" id="reverseChk" onchange="onReverseChange()" style="width:auto;margin:0">
+      </div>
     </div>
     <div class="card">
       <div class="settings-row">
@@ -309,6 +368,14 @@
       <div class="muted" style="margin-top:6px">
         Уведомление придёт, если приложение открыто или установлено как PWA.
       </div>
+    </div>
+    <div class="card">
+      <div class="settings-row">
+        <label>Авто-бэкап каждые N дней</label>
+        <span class="range-val" id="backupVal">7</span>
+      </div>
+      <input type="range" id="backupRange" min="1" max="30" step="1" oninput="onBackupChange()">
+      <div class="muted" style="margin-top:4px" id="backupHint"></div>
     </div>
     <div class="card">
       <div class="muted" style="margin-bottom:8px">Данные</div>
@@ -339,132 +406,145 @@ const STARTER_DECKS=[
   {id:'places',    name:'Места',         emoji:'📍'}
 ];
 
+/* [pt, ru, пример, deckId, эмодзи] */
 const STARTER=[
-  ["água","вода","Quero um copo de água.","food"],
-  ["café","кофе","Um café, por favor.","food"],
-  ["pão","хлеб","Pão de queijo é delicioso.","food"],
-  ["leite","молоко","Café com leite.","food"],
-  ["fruta","фрукт","Como fruta todo dia.","food"],
-  ["arroz","рис","O arroz está pronto.","food"],
-  ["feijão","фасоль","Feijão é típico do Brasil.","food"],
-  ["carne","мясо","Não como carne.","food"],
-  ["peixe","рыба","O peixe está fresco.","food"],
-  ["queijo","сыр","Pão com queijo.","food"],
-  ["ovo","яйцо","Um ovo cozido.","food"],
-  ["suco","сок","Suco de laranja.","food"],
-  ["cerveja","пиво","Uma cerveja gelada.","food"],
-  ["sobremesa","десерт","Que sobremesa você quer?","food"],
+  ["água","вода","Quero um copo de água.","food","💧"],
+  ["café","кофе","Um café, por favor.","food","☕"],
+  ["pão","хлеб","Pão de queijo é delicioso.","food","🍞"],
+  ["leite","молоко","Café com leite.","food","🥛"],
+  ["fruta","фрукт","Como fruta todo dia.","food","🍎"],
+  ["arroz","рис","O arroz está pronto.","food","🍚"],
+  ["feijão","фасоль","Feijão é típico do Brasil.","food","🫘"],
+  ["carne","мясо","Não como carne.","food","🥩"],
+  ["peixe","рыба","O peixe está fresco.","food","🐟"],
+  ["queijo","сыр","Pão com queijo.","food","🧀"],
+  ["ovo","яйцо","Um ovo cozido.","food","🥚"],
+  ["suco","сок","Suco de laranja.","food","🧃"],
+  ["cerveja","пиво","Uma cerveja gelada.","food","🍺"],
+  ["sobremesa","десерт","Que sobremesa você quer?","food","🍰"],
 
-  ["roupa","одежда","Preciso comprar roupa.","clothes"],
-  ["camisa","рубашка","Uma camisa branca.","clothes"],
-  ["camiseta","футболка","Camiseta azul.","clothes"],
-  ["calça","брюки","Calça jeans.","clothes"],
-  ["saia","юбка","Saia curta.","clothes"],
-  ["vestido","платье","Vestido bonito!","clothes"],
-  ["sapato","обувь","Sapato novo.","clothes"],
-  ["tênis","кроссовки","Tênis para correr.","clothes"],
-  ["meia","носок","Um par de meias.","clothes"],
-  ["chapéu","шляпа","Chapéu de palha.","clothes"],
-  ["casaco","куртка","Casaco de inverno.","clothes"],
-  ["bolsa","сумка","Bolsa de couro.","clothes"],
-  ["cinto","ремень","Cinto de couro.","clothes"],
-  ["óculos","очки","Óculos de sol.","clothes"],
+  ["roupa","одежда","Preciso comprar roupa.","clothes","👔"],
+  ["camisa","рубашка","Uma camisa branca.","clothes","👕"],
+  ["camiseta","футболка","Camiseta azul.","clothes","👚"],
+  ["calça","брюки","Calça jeans.","clothes","👖"],
+  ["saia","юбка","Saia curta.","clothes","👗"],
+  ["vestido","платье","Vestido bonito!","clothes","👗"],
+  ["sapato","обувь","Sapato novo.","clothes","👞"],
+  ["tênis","кроссовки","Tênis para correr.","clothes","👟"],
+  ["meia","носок","Um par de meias.","clothes","🧦"],
+  ["chapéu","шляпа","Chapéu de palha.","clothes","👒"],
+  ["casaco","куртка","Casaco de inverno.","clothes","🧥"],
+  ["bolsa","сумка","Bolsa de couro.","clothes","👜"],
+  ["cinto","ремень","Cinto de couro.","clothes","👔"],
+  ["óculos","очки","Óculos de sol.","clothes","👓"],
 
-  ["mesa","стол","A mesa é de madeira.","furniture"],
-  ["cadeira","стул","Sente-se na cadeira.","furniture"],
-  ["sofá","диван","Sofá confortável.","furniture"],
-  ["cama","кровать","A cama é grande.","furniture"],
-  ["armário","шкаф","Armário de roupa.","furniture"],
-  ["estante","полка","Livros na estante.","furniture"],
-  ["espelho","зеркало","Olhe no espelho.","furniture"],
-  ["lâmpada","лампа","A lâmpada queimou.","furniture"],
-  ["tapete","ковёр","Tapete vermelho.","furniture"],
-  ["geladeira","холодильник","A geladeira está cheia.","furniture"],
-  ["fogão","плита","O fogão está quente.","furniture"],
-  ["pia","раковина","A pia está suja.","furniture"],
+  ["mesa","стол","A mesa é de madeira.","furniture","🪑"],
+  ["cadeira","стул","Sente-se na cadeira.","furniture","🪑"],
+  ["sofá","диван","Sofá confortável.","furniture","🛋️"],
+  ["cama","кровать","A cama é grande.","furniture","🛏️"],
+  ["armário","шкаф","Armário de roupa.","furniture","🚪"],
+  ["estante","полка","Livros na estante.","furniture","📚"],
+  ["espelho","зеркало","Olhe no espelho.","furniture","🪞"],
+  ["lâmpada","лампа","A lâmpada queimou.","furniture","💡"],
+  ["tapete","ковёр","Tapete vermelho.","furniture","🧶"],
+  ["geladeira","холодильник","A geladeira está cheia.","furniture","🧊"],
+  ["fogão","плита","O fogão está quente.","furniture","🔥"],
+  ["pia","раковина","A pia está suja.","furniture","🚰"],
 
-  ["casa","дом","Minha casa é grande.","house"],
-  ["apartamento","квартира","Moro em um apartamento.","house"],
-  ["quarto","комната","Meu quarto é pequeno.","house"],
-  ["cozinha","кухня","A cozinha é nova.","house"],
-  ["banheiro","ванная","O banheiro está livre.","house"],
-  ["sala","гостиная","A sala é ampla.","house"],
-  ["porta","дверь","Feche a porta.","house"],
-  ["janela","окно","Abra a janela.","house"],
-  ["chave","ключ","Perdi a chave.","house"],
-  ["telhado","крыша","O telhado é vermelho.","house"],
-  ["jardim","сад","O jardim é bonito.","house"],
-  ["garagem","гараж","Carro na garagem.","house"],
+  ["casa","дом","Minha casa é grande.","house","🏠"],
+  ["apartamento","квартира","Moro em um apartamento.","house","🏢"],
+  ["quarto","комната","Meu quarto é pequeno.","house","🛏️"],
+  ["cozinha","кухня","A cozinha é nova.","house","🍳"],
+  ["banheiro","ванная","O banheiro está livre.","house","🚿"],
+  ["sala","гостиная","A sala é ampla.","house","🛋️"],
+  ["porta","дверь","Feche a porta.","house","🚪"],
+  ["janela","окно","Abra a janela.","house","🪟"],
+  ["chave","ключ","Perdi a chave.","house","🔑"],
+  ["telhado","крыша","O telhado é vermelho.","house","🏘️"],
+  ["jardim","сад","O jardim é bonito.","house","🌳"],
+  ["garagem","гараж","Carro na garagem.","house","🚗"],
 
-  ["médico","врач","O médico chegou.","medicine"],
-  ["hospital","больница","Vou ao hospital.","medicine"],
-  ["remédio","лекарство","Tome o remédio.","medicine"],
-  ["dor","боль","Sinto dor de cabeça.","medicine"],
-  ["cabeça","голова","Minha cabeça dói.","medicine"],
-  ["garganta","горло","Dor de garganta.","medicine"],
-  ["estômago","живот","Dor de estômago.","medicine"],
-  ["febre","температура","Estou com febre.","medicine"],
-  ["tosse","кашель","Tenho tosse.","medicine"],
-  ["gripe","грипп","Peguei uma gripe.","medicine"],
-  ["sangue","кровь","Preciso de sangue.","medicine"],
-  ["enfermeira","медсестра","A enfermeira é gentil.","medicine"],
-  ["receita","рецепт","O médico deu a receita.","medicine"],
-  ["farmácia","аптека","A farmácia está aberta.","medicine"],
+  ["médico","врач","O médico chegou.","medicine","👨‍⚕️"],
+  ["hospital","больница","Vou ao hospital.","medicine","🏥"],
+  ["remédio","лекарство","Tome o remédio.","medicine","💊"],
+  ["dor","боль","Sinto dor de cabeça.","medicine","😣"],
+  ["cabeça","голова","Minha cabeça dói.","medicine","🧠"],
+  ["garganta","горло","Dor de garganta.","medicine","😷"],
+  ["estômago","живот","Dor de estômago.","medicine","🫃"],
+  ["febre","температура","Estou com febre.","medicine","🌡️"],
+  ["tosse","кашель","Tenho tosse.","medicine","🤧"],
+  ["gripe","грипп","Peguei uma gripe.","medicine","🤒"],
+  ["sangue","кровь","Preciso de sangue.","medicine","🩸"],
+  ["enfermeira","медсестра","A enfermeira é gentil.","medicine","👩‍⚕️"],
+  ["receita","рецепт","O médico deu a receita.","medicine","📋"],
+  ["farmácia","аптека","A farmácia está aberta.","medicine","💊"],
 
-  ["comer","есть","Vamos comer algo?","verbs"],
-  ["beber","пить","Preciso beber água.","verbs"],
-  ["falar","говорить","Você fala inglês?","verbs"],
-  ["morar","жить","Eu moro em Moscou.","verbs"],
-  ["trabalhar","работать","Ela trabalha muito.","verbs"],
-  ["estudar","учиться","Estudo português.","verbs"],
-  ["querer","хотеть","Quero aprender rápido.","verbs"],
-  ["poder","мочь","Você pode me ajudar?","verbs"],
-  ["precisar","нуждаться","Preciso de ajuda.","verbs"],
-  ["gostar","нравиться","Gosto muito do Brasil.","verbs"],
-  ["comprar","покупать","Vou comprar pão.","verbs"],
-  ["dormir","спать","Preciso dormir.","verbs"],
+  ["comer","есть","Vamos comer algo?","verbs","🍽️"],
+  ["beber","пить","Preciso beber água.","verbs","🥤"],
+  ["falar","говорить","Você fala inglês?","verbs","💬"],
+  ["morar","жить","Eu moro em Moscou.","verbs","🏠"],
+  ["trabalhar","работать","Ela trabalha muito.","verbs","💼"],
+  ["estudar","учиться","Estudo português.","verbs","📖"],
+  ["querer","хотеть","Quero aprender rápido.","verbs","🙏"],
+  ["poder","мочь","Você pode me ajudar?","verbs","💪"],
+  ["precisar","нуждаться","Preciso de ajuda.","verbs","🆘"],
+  ["gostar","нравиться","Gosto muito do Brasil.","verbs","❤️"],
+  ["comprar","покупать","Vou comprar pão.","verbs","🛒"],
+  ["dormir","спать","Preciso dormir.","verbs","😴"],
 
-  ["amigo","друг","Ele é meu amigo.","daily"],
-  ["trabalho","работа","Vou ao trabalho agora.","daily"],
-  ["tempo","время / погода","Não tenho tempo hoje.","daily"],
-  ["dia","день","Bom dia!","daily"],
-  ["noite","ночь","Boa noite!","daily"],
-  ["hoje","сегодня","Hoje eu trabalho.","daily"],
-  ["amanhã","завтра","Amanhã vou à praia.","daily"],
-  ["sempre","всегда","Ele sempre chega cedo.","daily"],
-  ["nunca","никогда","Eu nunca fui ao Brasil.","daily"],
-  ["muito","очень","Obrigado, muito bom!","daily"],
-  ["pouco","мало","Falo pouco português.","daily"],
-  ["obrigado","спасибо","Muito obrigado!","daily"],
-  ["por favor","пожалуйста","Um café, por favor.","daily"],
-  ["desculpa","извини","Desculpa, não entendi.","daily"],
+  ["amigo","друг","Ele é meu amigo.","daily","👫"],
+  ["trabalho","работа","Vou ao trabalho agora.","daily","💼"],
+  ["tempo","время / погода","Não tenho tempo hoje.","daily","⏰"],
+  ["dia","день","Bom dia!","daily","☀️"],
+  ["noite","ночь","Boa noite!","daily","🌙"],
+  ["hoje","сегодня","Hoje eu trabalho.","daily","📅"],
+  ["amanhã","завтра","Amanhã vou à praia.","daily","📆"],
+  ["sempre","всегда","Ele sempre chega cedo.","daily","♾️"],
+  ["nunca","никогда","Eu nunca fui ao Brasil.","daily","🚫"],
+  ["muito","очень","Obrigado, muito bom!","daily","💯"],
+  ["pouco","мало","Falo pouco português.","daily","🤏"],
+  ["obrigado","спасибо","Muito obrigado!","daily","🙏"],
+  ["por favor","пожалуйста","Um café, por favor.","daily","🤲"],
+  ["desculpa","извини","Desculpa, não entendi.","daily","🙇"],
 
-  ["bom","хороший","Este livro é muito bom.","adjectives"],
-  ["ruim","плохой","O tempo está ruim.","adjectives"],
-  ["grande","большой","É uma casa grande.","adjectives"],
-  ["pequeno","маленький","Um café pequeno.","adjectives"],
-  ["bonito","красивый","Que lugar bonito!","adjectives"],
-  ["novo","новый","Comprei um carro novo.","adjectives"],
-  ["velho","старый","Meu avô é velho.","adjectives"],
-  ["caro","дорогой","Muito caro!","adjectives"],
+  ["bom","хороший","Este livro é muito bom.","adjectives","👍"],
+  ["ruim","плохой","O tempo está ruim.","adjectives","👎"],
+  ["grande","большой","É uma casa grande.","adjectives","🐘"],
+  ["pequeno","маленький","Um café pequeno.","adjectives","🐜"],
+  ["bonito","красивый","Que lugar bonito!","adjectives","🌸"],
+  ["novo","новый","Comprei um carro novo.","adjectives","✨"],
+  ["velho","старый","Meu avô é velho.","adjectives","🧓"],
+  ["caro","дорогой","Muito caro!","adjectives","💰"],
 
-  ["cidade","город","São Paulo é uma cidade grande.","places"],
-  ["praia","пляж","Vamos à praia amanhã.","places"],
-  ["rua","улица","Moro nesta rua.","places"],
-  ["loja","магазин","A loja está aberta.","places"],
-  ["mercado","рынок","Vou ao mercado.","places"],
-  ["escola","школа","As crianças vão à escola.","places"],
-  ["igreja","церковь","A igreja é antiga.","places"]
+  ["cidade","город","São Paulo é uma cidade grande.","places","🏙️"],
+  ["praia","пляж","Vamos à praia amanhã.","places","🏖️"],
+  ["rua","улица","Moro nesta rua.","places","🛣️"],
+  ["loja","магазин","A loja está aberta.","places","🏪"],
+  ["mercado","рынок","Vou ao mercado.","places","🛒"],
+  ["escola","школа","As crianças vão à escola.","places","🏫"],
+  ["igreja","церковь","A igreja é antiga.","places","⛪"]
 ];
 
 const SRS=[1,3,7,14,30,60,120];
-const STORAGE_KEY='ptbr_v7';
+const STORAGE_KEY='ptbr_v8';
 
 let state={
   words:[], decks:[],
   progress:{},
   streak:{last:null,count:0,best:0},
-  settings:{newLimit:20,activeDeck:'all',dailyGoal:20,autoTheme:true,reminder:false,reminderTime:'19:00',lastReminder:null},
+  settings:{
+    newLimit:20,
+    activeDecks:['all'],
+    dailyGoal:20,
+    autoTheme:true,
+    sysTheme:false,
+    reverse:false,
+    reminder:false,
+    reminderTime:'19:00',
+    lastReminder:null,
+    backupDays:7,
+    lastBackup:null
+  },
   activity:{},
   daily:{date:null,count:0},
   theme:'dark',
@@ -475,6 +555,7 @@ let queue=[],qi=0,cur=null,editingId=null;
 let wordsFilter='all';
 let currentMode='cards';
 let reminderTimer=null;
+let sysThemeMQ=null;
 
 function esc(s){
   return String(s==null?'':s).replace(/[&<>"']/g,c=>({
@@ -491,7 +572,10 @@ function lastNDays(n){
 }
 function deckById(id){return state.decks.find(d=>d.id===id)||null}
 
-function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}catch(e){alert('Ошибка сохранения: '+e.message)}}
+function save(){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}
+  catch(e){alert('Ошибка сохранения: '+e.message)}
+}
 
 function load(){
   try{
@@ -502,7 +586,20 @@ function load(){
   state.decks=Array.isArray(state.decks)?state.decks:[];
   state.progress=state.progress||{};
   state.streak=state.streak||{last:null,count:0,best:0};
-  state.settings=Object.assign({newLimit:20,activeDeck:'all',dailyGoal:20,autoTheme:true,reminder:false,reminderTime:'19:00',lastReminder:null},state.settings||{});
+  state.settings=Object.assign({
+    newLimit:20,activeDecks:['all'],dailyGoal:20,
+    autoTheme:true,sysTheme:false,reverse:false,
+    reminder:false,reminderTime:'19:00',lastReminder:null,
+    backupDays:7,lastBackup:null
+  },state.settings||{});
+  // совместимость со старой версией
+  if(state.settings.activeDeck&&!state.settings.activeDecks){
+    state.settings.activeDecks=[state.settings.activeDeck];
+    delete state.settings.activeDeck;
+  }
+  if(!Array.isArray(state.settings.activeDecks)||!state.settings.activeDecks.length){
+    state.settings.activeDecks=['all'];
+  }
   state.activity=state.activity||{};
   state.daily=state.daily||{date:null,count:0};
   state.theme=state.theme||'dark';
@@ -512,11 +609,13 @@ function load(){
   if(state.streak.best==null)state.streak.best=state.streak.count||0;
   if(!state.decks.length)state.decks=STARTER_DECKS.map(d=>({...d}));
   if(!state.words.length){
-    state.words=STARTER.map((w,i)=>({id:'w'+i,word:w[0],translation:w[1],example:w[2],deckId:w[3]}));
+    state.words=STARTER.map((w,i)=>({
+      id:'w'+i,word:w[0],translation:w[1],example:w[2],deckId:w[3],emoji:w[4]||'',note:''
+    }));
   }
-  if(state.settings.activeDeck!=='all'&&!deckById(state.settings.activeDeck)){
-    state.settings.activeDeck='all';
-  }
+  // чистим активные колоды от удалённых
+  state.settings.activeDecks=state.settings.activeDecks.filter(id=>id==='all'||deckById(id));
+  if(!state.settings.activeDecks.length)state.settings.activeDecks=['all'];
 }
 
 function currentHourTheme(){
@@ -524,8 +623,14 @@ function currentHourTheme(){
   return (h>=7 && h<19) ? 'light' : 'dark';
 }
 
+function systemPrefersDark(){
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
 function applyTheme(){
-  if(state.settings.autoTheme && state.bg!=='photo'){
+  if(state.settings.sysTheme){
+    state.theme=systemPrefersDark()?'dark':'light';
+  }else if(state.settings.autoTheme && state.bg!=='photo'){
     state.theme=currentHourTheme();
   }
   const light = (state.bg==='light') || (state.bg==='photo' && state.theme==='light');
@@ -538,12 +643,15 @@ function applyTheme(){
   });
   const chk=document.getElementById('autoThemeChk');
   if(chk)chk.checked=!!state.settings.autoTheme;
+  const schk=document.getElementById('sysThemeChk');
+  if(schk)schk.checked=!!state.settings.sysTheme;
   const meta=document.querySelector('meta[name=theme-color]');
   if(meta)meta.setAttribute('content', light?'#f5f7fa':'#0f1419');
 }
 
 function toggleTheme(){
   state.settings.autoTheme=false;
+  state.settings.sysTheme=false;
   state.theme = state.theme==='dark' ? 'light' : 'dark';
   if(state.bg==='dark') state.bg='light';
   else if(state.bg==='light') state.bg='dark';
@@ -558,9 +666,27 @@ function setBg(v){
 }
 
 function onAutoThemeChange(){
-  const chk=document.getElementById('autoThemeChk');
-  state.settings.autoTheme=!!chk.checked;
+  state.settings.autoTheme=!!document.getElementById('autoThemeChk').checked;
   save();applyTheme();
+}
+function onSysThemeChange(){
+  state.settings.sysTheme=!!document.getElementById('sysThemeChk').checked;
+  if(state.settings.sysTheme)state.settings.autoTheme=false;
+  save();applyTheme();
+}
+function onReverseChange(){
+  state.settings.reverse=!!document.getElementById('reverseChk').checked;
+  save();
+  if(document.getElementById('s-study').classList.contains('on'))renderStudy();
+}
+
+function initSysThemeListener(){
+  if(!window.matchMedia)return;
+  if(sysThemeMQ)return;
+  sysThemeMQ=window.matchMedia('(prefers-color-scheme: dark)');
+  const handler=()=>{if(state.settings.sysTheme)applyTheme()};
+  if(sysThemeMQ.addEventListener)sysThemeMQ.addEventListener('change',handler);
+  else if(sysThemeMQ.addListener)sysThemeMQ.addListener(handler);
 }
 
 function isNew(id){return !state.progress[id]}
@@ -571,14 +697,12 @@ function markActivity(){
   const t=today();
   state.activity[t]=(state.activity[t]||0)+1;
 }
-
 function markDaily(){
   const t=today();
   if(state.daily.date!==t)state.daily={date:t,count:0};
   state.daily.count++;
   renderGoalRing();
 }
-
 function updStreak(){
   const t=today();
   if(state.streak.last===t)return;
@@ -627,10 +751,25 @@ function show(id){
   window.scrollTo(0,0);
 }
 
-function wordsInActiveDeck(){
-  const a=state.settings.activeDeck;
-  if(a==='all')return state.words;
-  return state.words.filter(w=>w.deckId===a);
+/* ---- Мультивыбор колод ---- */
+function wordsInActiveDecks(){
+  const a=state.settings.activeDecks||['all'];
+  if(a.includes('all')||!a.length)return state.words;
+  return state.words.filter(w=>a.includes(w.deckId));
+}
+function toggleActiveDeck(id){
+  const a=state.settings.activeDecks;
+  if(id==='all'){state.settings.activeDecks=['all'];save();renderHome();return}
+  let next=a.filter(x=>x!=='all');
+  if(next.includes(id))next=next.filter(x=>x!==id);
+  else next.push(id);
+  if(!next.length)next=['all'];
+  state.settings.activeDecks=next;
+  save();renderHome();
+}
+function clearDecks(){
+  state.settings.activeDecks=['all'];
+  save();renderHome();
 }
 function wordsInFilter(){
   if(wordsFilter==='all')return state.words;
@@ -660,7 +799,7 @@ function wordsInFilter(){
 }
 
 function renderHome(){
-  const scope=wordsInActiveDeck();
+  const scope=wordsInActiveDecks();
   document.getElementById('nNew').textContent=scope.filter(w=>isNew(w.id)).length;
   document.getElementById('nDue').textContent=scope.filter(w=>isDue(w.id)).length;
   document.getElementById('nLearned').textContent=scope.filter(w=>isLearned(w.id)).length;
@@ -672,20 +811,20 @@ function renderHome(){
 
 function renderDeckBar(){
   const bar=document.getElementById('deckBar');
-  const a=state.settings.activeDeck;
+  const active=state.settings.activeDecks||['all'];
+  const allOn=active.includes('all');
   const chips=[];
-  chips.push('<div class="deck-chip'+(a==='all'?' on':'')+'" onclick="setActiveDeck(\'all\')">'+
+  chips.push('<div class="deck-chip'+(allOn?' on':'')+'" onclick="toggleActiveDeck(\'all\')">'+
     '<span class="deck-icon">📚</span>Все <span style="opacity:.7">('+state.words.length+')</span></div>');
   state.decks.forEach(d=>{
     const n=state.words.filter(w=>w.deckId===d.id).length;
-    chips.push('<div class="deck-chip'+(a===d.id?' on':'')+'" onclick="setActiveDeck(\''+d.id+'\')">'+
+    const on=!allOn && active.includes(d.id);
+    chips.push('<div class="deck-chip'+(on?' on':'')+'" onclick="toggleActiveDeck(\''+d.id+'\')">'+
       '<span class="deck-icon">'+esc(d.emoji||'🗂️')+'</span>'+esc(d.name)+
       ' <span style="opacity:.7">('+n+')</span></div>');
   });
   bar.innerHTML=chips.join('');
 }
-
-function setActiveDeck(id){state.settings.activeDeck=id;save();renderHome()}
 
 function renderMiniChart(){
   const days=lastNDays(14);
@@ -699,17 +838,17 @@ function renderMiniChart(){
 }
 
 function buildQ(mode){
-  const scope=wordsInActiveDeck();
+  const scope=wordsInActiveDecks();
   if(mode==='review'){
     const q=scope.filter(w=>isDue(w.id));
-    if(!q.length){alert('Нет слов к повторению в этой колоде');return null}
+    if(!q.length){alert('Нет слов к повторению в выбранных колодах');return null}
     return shuffle(q);
   }
   const due=scope.filter(w=>isDue(w.id));
   const limit=state.settings.newLimit||20;
   const fresh=shuffle(scope.filter(w=>isNew(w.id))).slice(0,limit);
   const q=[...due,...fresh];
-  if(!q.length){alert('Все слова в этой колоде выучены! Добавьте новые.');return null}
+  if(!q.length){alert('Все слова в выбранных колодах выучены! Добавьте новые.');return null}
   return shuffle(q);
 }
 
@@ -765,9 +904,39 @@ function renderStudy(){
   const dt=document.getElementById('deckTag');
   dt.textContent = d ? ((d.emoji||'🗂️')+' '+d.name) : 'Без колоды';
 
-  document.getElementById('w').textContent=cur.word;
+  // эмодзи-иллюстрация
+  const emojiBig=document.getElementById('emojiBig');
+  if(cur.emoji){
+    emojiBig.textContent=cur.emoji;
+    emojiBig.style.display='block';
+  }else{
+    emojiBig.style.display='none';
+  }
+
+  // обратный режим
+  const rev=state.settings.reverse;
+  const wEl=document.getElementById('w');
+  const wRevEl=document.getElementById('wReverse');
+  if(rev){
+    wEl.textContent=cur.translation;
+    wEl.style.color='var(--ok)';
+    wRevEl.textContent='→ '+cur.word;
+    wRevEl.style.display='block';
+  }else{
+    wEl.textContent=cur.word;
+    wEl.style.color='';
+    wRevEl.style.display='none';
+  }
+
   document.getElementById('tr').textContent=cur.translation;
   document.getElementById('ex').textContent=cur.example||'';
+  const nb=document.getElementById('noteBox');
+  if(cur.note){
+    nb.textContent='📝 '+cur.note;
+    nb.style.display='block';
+  }else{
+    nb.style.display='none';
+  }
   document.getElementById('ans').style.display='none';
   bar.style.width=(qi/queue.length*100)+'%';
   counter.textContent=(qi+1)+' / '+queue.length;
@@ -806,11 +975,27 @@ function ans(q){
   qi++;renderStudy();
 }
 
+function skipCard(){
+  if(!cur)return;
+  // не влияет на прогресс — просто идём дальше
+  qi++;
+  if(qi>=queue.length){
+    // если это был последний — просто завершаем
+    renderStudy();
+  }else{
+    renderStudy();
+  }
+}
+
 function renderListenOptions(){
   const box=document.getElementById('listenOptions');
-  const correct=cur.translation;
-  const pool=state.words.filter(w=>w.translation!==correct);
-  const wrongs=shuffle(pool).slice(0,3).map(w=>w.translation);
+  const rev=state.settings.reverse;
+  const correct=rev?cur.word:cur.translation;
+  const pool=state.words.filter(w=>{
+    const v=rev?w.word:w.translation;
+    return v!==correct;
+  });
+  const wrongs=shuffle(pool).slice(0,3).map(w=>rev?w.word:w.translation);
   while(wrongs.length<3)wrongs.push('—');
   const opts=shuffle([correct,...wrongs]);
   box.innerHTML=opts.map(t=>{
@@ -821,7 +1006,8 @@ function renderListenOptions(){
 
 function listenAnswer(btn,value){
   if(btn.disabled)return;
-  const correct=cur.translation;
+  const rev=state.settings.reverse;
+  const correct=rev?cur.word:cur.translation;
   document.querySelectorAll('#listenOptions button').forEach(b=>b.disabled=true);
   if(value===correct){
     btn.style.background='var(--ok)';
@@ -845,9 +1031,11 @@ function normalize(s){
 function typeCheck(){
   const val=document.getElementById('typeInput').value;
   const fb=document.getElementById('typeFeedback');
-  const correct=cur.translation;
+  const rev=state.settings.reverse;
+  const correct=rev?cur.word:cur.translation;
+  const label=rev?'португальский':'перевод';
   if(!val.trim()){
-    fb.textContent='Введите перевод';
+    fb.textContent='Введите '+label;
     fb.style.color='var(--warn)';
     return;
   }
@@ -877,12 +1065,15 @@ function renderWords(){
     const due=p?(' · до '+p.dueDate):'';
     const d=deckById(w.deckId);
     const deckLabel=d?((d.emoji||'🗂️')+' '+d.name):'Без колоды';
+    const emoji=w.emoji?'<span style="font-size:22px;margin-right:6px">'+esc(w.emoji)+'</span>':'';
+    const note=w.note?'<div class="note-box">📝 '+esc(w.note)+'</div>':'';
     return '<div class="word">'+
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'+
         '<div style="min-width:0;flex:1">'+
-          '<div style="font-weight:600;font-size:16px;word-break:break-word">'+esc(w.word)+'</div>'+
+          '<div style="font-weight:600;font-size:16px;word-break:break-word">'+emoji+esc(w.word)+'</div>'+
           '<div style="color:var(--ok);font-size:14px;word-break:break-word">'+esc(w.translation)+'</div>'+
           (w.example?'<div class="muted" style="margin-top:4px;font-style:italic">'+esc(w.example)+'</div>':'')+
+          note+
           '<div class="muted" style="margin-top:4px">'+esc(status+due)+'</div>'+
           '<div class="muted" style="margin-top:2px">'+esc(deckLabel)+'</div>'+
         '</div>'+
@@ -929,12 +1120,26 @@ function fillDeckSelect(selectedId){
   sel.innerHTML=opts.join('');
 }
 
+function fillImportDeckSelect(selectedId){
+  const sel=document.getElementById('importDeck');
+  if(!sel)return;
+  const opts=['<option value="">Без колоды</option>'];
+  state.decks.forEach(d=>{
+    opts.push('<option value="'+d.id+'"'+(selectedId===d.id?' selected':'')+'>'+
+      esc((d.emoji||'🗂️')+' '+d.name)+'</option>');
+  });
+  sel.innerHTML=opts.join('');
+}
+
 function openAdd(){
   editingId=null;
   document.getElementById('iW').value='';
   document.getElementById('iT').value='';
   document.getElementById('iE').value='';
-  const def = state.settings.activeDeck!=='all' ? state.settings.activeDeck : '';
+  document.getElementById('iEmoji').value='';
+  document.getElementById('iNote').value='';
+  const active=state.settings.activeDecks||['all'];
+  const def = (active.length===1 && active[0]!=='all') ? active[0] : '';
   fillDeckSelect(def);
   show('s-add');
 }
@@ -946,6 +1151,8 @@ function openEdit(id){
   document.getElementById('iW').value=w.word;
   document.getElementById('iT').value=w.translation;
   document.getElementById('iE').value=w.example||'';
+  document.getElementById('iEmoji').value=w.emoji||'';
+  document.getElementById('iNote').value=w.note||'';
   fillDeckSelect(w.deckId||'');
   show('s-add');
 }
@@ -954,22 +1161,67 @@ function saveWord(){
   const w=document.getElementById('iW').value.trim();
   const t=document.getElementById('iT').value.trim();
   const e=document.getElementById('iE').value.trim();
+  const emoji=document.getElementById('iEmoji').value.trim();
+  const note=document.getElementById('iNote').value.trim();
   const deckId=document.getElementById('iD').value||'';
   if(!w||!t){alert('Заполните слово и перевод');return}
   const dup=state.words.find(x=>x.word.toLowerCase()===w.toLowerCase()&&x.id!==editingId);
   if(dup){alert('Это слово уже есть в словаре');return}
   if(editingId){
     const item=state.words.find(x=>x.id===editingId);
-    if(item){item.word=w;item.translation=t;item.example=e;item.deckId=deckId}
+    if(item){
+      item.word=w;item.translation=t;item.example=e;
+      item.emoji=emoji;item.note=note;item.deckId=deckId;
+    }
   }else{
-    state.words.push({id:'u'+Date.now(),word:w,translation:t,example:e,deckId:deckId});
+    state.words.push({
+      id:'u'+Date.now(),word:w,translation:t,example:e,
+      emoji:emoji,note:note,deckId:deckId
+    });
   }
   editingId=null;
   save();
   show('s-words');
   renderWords();
+}/* ===== ИМПОРТ СПИСКА СЛОВ ===== */
+function importWordsText(){
+  const raw=document.getElementById('importText').value||'';
+  const deckId=document.getElementById('importDeck').value||'';
+  const res=document.getElementById('importResult');
+  if(!raw.trim()){
+    res.textContent='Вставьте хотя бы одну строку';
+    res.style.color='var(--warn)';
+    return;
+  }
+  const lines=raw.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  let added=0, skipped=0;
+  const now=Date.now();
+  lines.forEach((line,i)=>{
+    // разделители: ; | таб | запятая (первая встреченная)
+    let parts;
+    if(line.includes(';'))parts=line.split(';');
+    else if(line.includes('\t'))parts=line.split('\t');
+    else parts=line.split(',');
+    parts=parts.map(p=>p.trim());
+    const w=parts[0]||'';
+    const t=parts[1]||'';
+    const e=parts[2]||'';
+    const emoji=parts[3]||'';
+    if(!w||!t){skipped++;return}
+    if(state.words.some(x=>x.word.toLowerCase()===w.toLowerCase())){skipped++;return}
+    state.words.push({
+      id:'i'+now+'_'+i,
+      word:w,translation:t,example:e,emoji:emoji,note:'',deckId:deckId
+    });
+    added++;
+  });
+  save();
+  res.innerHTML='✅ Добавлено: <b>'+added+'</b> · пропущено: '+skipped;
+  res.style.color='var(--ok)';
+  document.getElementById('importText').value='';
 }
 
+/* ===== УПРАВЛЕНИЕ КОЛОДАМИ ===== */
 function renderDecksManage(){
   const list=document.getElementById('deckList');
   if(!state.decks.length){
@@ -1025,11 +1277,13 @@ function deleteDeck(id){
   if(!confirm(msg))return;
   state.words.forEach(w=>{if(w.deckId===id)w.deckId=''});
   state.decks=state.decks.filter(x=>x.id!==id);
-  if(state.settings.activeDeck===id)state.settings.activeDeck='all';
+  state.settings.activeDecks=(state.settings.activeDecks||['all']).filter(x=>x!=='all'?x!==id:true);
+  if(!state.settings.activeDecks.length)state.settings.activeDecks=['all'];
   if(wordsFilter===id)wordsFilter='all';
   save();renderDecksManage();
 }
 
+/* ===== СТАТИСТИКА ===== */
 function renderStats(){
   const days=lastNDays(14);
   const vals=days.map(d=>state.activity[d]||0);
@@ -1044,8 +1298,38 @@ function renderStats(){
   document.getElementById('stBest').textContent=state.streak.best||0;
   const totalAnswers=Object.values(state.activity).reduce((a,b)=>a+b,0);
   document.getElementById('stAnswers').textContent=totalAnswers;
+  renderDeckStats();
 }
 
+function renderDeckStats(){
+  const box=document.getElementById('deckStats');
+  if(!box)return;
+  const rows=[];
+  // «Без колоды»
+  const noDeck=state.words.filter(w=>!w.deckId);
+  if(noDeck.length){
+    const learned=noDeck.filter(w=>isLearned(w.id)).length;
+    rows.push(deckStatsRow('🗂️ Без колоды',learned,noDeck.length));
+  }
+  state.decks.forEach(d=>{
+    const words=state.words.filter(w=>w.deckId===d.id);
+    if(!words.length)return;
+    const learned=words.filter(w=>isLearned(w.id)).length;
+    rows.push(deckStatsRow((d.emoji||'🗂️')+' '+d.name,learned,words.length));
+  });
+  box.innerHTML=rows.join('')||'<div class="muted center">Пока нет данных</div>';
+}
+
+function deckStatsRow(name,learned,total){
+  const pct=total?Math.round(learned/total*100):0;
+  return '<div class="deck-stats-row">'+
+    '<div style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(name)+'</div>'+
+    '<div class="muted" style="white-space:nowrap">'+learned+'/'+total+'</div>'+
+    '<div class="deck-stats-bar"><div style="width:'+pct+'%"></div></div>'+
+  '</div>';
+}
+
+/* ===== НАСТРОЙКИ ===== */
 function onLimitChange(){
   const v=parseInt(document.getElementById('limitRange').value,10);
   document.getElementById('limitVal').textContent=v;
@@ -1061,6 +1345,26 @@ function onGoalChange(){
   renderGoalRing();
 }
 
+function onBackupChange(){
+  const v=parseInt(document.getElementById('backupRange').value,10);
+  document.getElementById('backupVal').textContent=v;
+  state.settings.backupDays=v;
+  save();
+  updateBackupHint();
+}
+
+function updateBackupHint(){
+  const el=document.getElementById('backupHint');
+  if(!el)return;
+  const last=state.settings.lastBackup;
+  if(!last){
+    el.textContent='Ещё не делался';
+    return;
+  }
+  const d=daysBetween(last,today());
+  el.textContent='Последний: '+last+' ('+d+' дн. назад)';
+}
+
 function initSettings(){
   const v=state.settings.newLimit||20;
   document.getElementById('limitRange').value=v;
@@ -1068,12 +1372,20 @@ function initSettings(){
   const g=state.settings.dailyGoal||20;
   document.getElementById('goalRange').value=g;
   document.getElementById('goalVal').textContent=g;
+  const b=state.settings.backupDays||7;
+  document.getElementById('backupRange').value=b;
+  document.getElementById('backupVal').textContent=b;
   const chk=document.getElementById('autoThemeChk');
   if(chk)chk.checked=!!state.settings.autoTheme;
-  const rchk=document.getElementById('reminderChk');
-  if(rchk)rchk.checked=!!state.settings.reminder;
+  const schk=document.getElementById('sysThemeChk');
+  if(schk)schk.checked=!!state.settings.sysTheme;
+  const rchk=document.getElementById('reverseChk');
+  if(rchk)rchk.checked=!!state.settings.reverse;
+  const rmchk=document.getElementById('reminderChk');
+  if(rmchk)rmchk.checked=!!state.settings.reminder;
   const rinp=document.getElementById('reminderTime');
   if(rinp)rinp.value=state.settings.reminderTime||'19:00';
+  updateBackupHint();
 }
 
 /* ===== НАПОМИНАНИЯ ===== */
@@ -1150,15 +1462,23 @@ function checkReminder(){
   save();
 }
 
-function exportData(){
-  const data=JSON.stringify(state,null,2);
-  const blob=new Blob([data],{type:'application/json'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download='ptbr-backup-'+today()+'.json';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+/* ===== ЭКСПОРТ / ИМПОРТ ===== */
+function exportData(auto){
+  try{
+    const data=JSON.stringify(state,null,2);
+    const blob=new Blob([data],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download='ptbr-backup-'+today()+'.json';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    if(auto){
+      state.settings.lastBackup=today();
+      save();
+      updateBackupHint();
+    }
+  }catch(e){alert('Ошибка экспорта: '+e.message)}
 }
 
 function importData(ev){
@@ -1177,7 +1497,19 @@ function importData(ev){
       state.decks=state.decks||[];
       state.progress=state.progress||{};
       state.streak=state.streak||{last:null,count:0,best:0};
-      state.settings=Object.assign({newLimit:20,activeDeck:'all',dailyGoal:20,autoTheme:true,reminder:false,reminderTime:'19:00',lastReminder:null},state.settings||{});
+      state.settings=Object.assign({
+        newLimit:20,activeDecks:['all'],dailyGoal:20,
+        autoTheme:true,sysTheme:false,reverse:false,
+        reminder:false,reminderTime:'19:00',lastReminder:null,
+        backupDays:7,lastBackup:null
+      },state.settings||{});
+      if(state.settings.activeDeck&&!state.settings.activeDecks){
+        state.settings.activeDecks=[state.settings.activeDeck];
+        delete state.settings.activeDeck;
+      }
+      if(!Array.isArray(state.settings.activeDecks)||!state.settings.activeDecks.length){
+        state.settings.activeDecks=['all'];
+      }
       state.activity=state.activity||{};
       state.daily=state.daily||{date:null,count:0};
       state.theme=state.theme||'dark';
@@ -1199,16 +1531,37 @@ function importData(ev){
 function resetAll(){
   if(!confirm('Удалить все слова и прогресс?'))return;
   if(!confirm('Точно? Это действие необратимо.'))return;
-  const theme=state.theme, bg=state.bg, auto=state.settings.autoTheme;
+  const theme=state.theme, bg=state.bg, auto=state.settings.autoTheme, sys=state.settings.sysTheme;
   localStorage.removeItem(STORAGE_KEY);
-  state={words:[],decks:[],progress:{},streak:{last:null,count:0,best:0},
-         settings:{newLimit:20,activeDeck:'all',dailyGoal:20,autoTheme:auto,reminder:false,reminderTime:'19:00',lastReminder:null},
-         activity:{},daily:{date:null,count:0},theme:theme,bg:bg,mode:'cards'};
+  state={
+    words:[],decks:[],progress:{},streak:{last:null,count:0,best:0},
+    settings:{
+      newLimit:20,activeDecks:['all'],dailyGoal:20,
+      autoTheme:auto,sysTheme:sys,reverse:false,
+      reminder:false,reminderTime:'19:00',lastReminder:null,
+      backupDays:7,lastBackup:null
+    },
+    activity:{},daily:{date:null,count:0},
+    theme:theme,bg:bg,mode:'cards'
+  };
   currentMode='cards';
   load();applyTheme();initSettings();setMode(currentMode);
   show('s-home');renderHome();
 }
 
+/* ===== АВТО-БЭКАП ===== */
+function checkAutoBackup(){
+  const days=state.settings.backupDays||7;
+  const last=state.settings.lastBackup;
+  if(!last){return} // первый раз — ждём ручного экспорта
+  const diff=daysBetween(last,today());
+  if(diff>=days){
+    const ok=confirm('Прошло '+diff+' дней с последнего бэкапа. Сделать сейчас?');
+    if(ok)exportData(true);
+  }
+}
+
+/* ===== SERVICE WORKER ===== */
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
     navigator.serviceWorker.register('sw.js').catch(()=>{});
@@ -1219,9 +1572,12 @@ if('serviceWorker' in navigator){
 load();
 applyTheme();
 initSettings();
+initSysThemeListener();
 setMode(currentMode);
 renderHome();
+fillImportDeckSelect('');
 if(state.settings.reminder)scheduleReminderCheck();
+setTimeout(checkAutoBackup,1500);
 </script>
 </body>
 </html>
