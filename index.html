@@ -197,7 +197,6 @@
       <div id="studyDone" style="display:none;text-align:center;padding:40px 20px;color:var(--muted)"></div>
     </div>
 
-    <!-- Режим Карточки -->
     <div id="cardsBox">
       <button class="g" id="reveal" onclick="reveal()">Показать ответ</button>
       <div id="buttons" style="display:none">
@@ -212,13 +211,11 @@
       </div>
     </div>
 
-    <!-- Режим Аудирование -->
     <div id="listenBox" style="display:none">
       <button class="s" onclick="say(cur&&cur.word)">🔊 Прослушать ещё раз</button>
       <div id="listenOptions" style="display:grid;gap:8px"></div>
     </div>
 
-    <!-- Режим Ввод -->
     <div id="typeBox" style="display:none">
       <input id="typeInput" placeholder="Введите перевод…" autocomplete="off" autocapitalize="off" spellcheck="false" onkeydown="if(event.key==='Enter')typeCheck()">
       <button class="g" onclick="typeCheck()">Проверить</button>
@@ -264,7 +261,7 @@
       <div class="label">Вставьте список слов</div>
       <div class="muted" style="margin-bottom:8px">
         Одна строка — одно слово. Формат: <b>palavra;перевод;пример;эмодзи</b><br>
-        Разделители: <b>;</b> или <b>табуляция</b> или <b>запятая</b>. Пример и эмодзи — необязательны.
+        Разделители: <b>;</b> · табуляция · запятая. Пример и эмодзи — необязательны.
       </div>
       <textarea id="importText" placeholder="casa;дом;Minha casa é grande.;🏠
 água;вода;Quero água.;💧
@@ -308,6 +305,17 @@ comer;есть;;🍽️" style="min-height:180px"></textarea>
       <div id="deckStats" style="margin-top:8px"></div>
     </div>
     <button class="s" onclick="show('s-home');renderHome()">← Назад</button>
+  </div>
+
+  <div class="screen" id="s-backups">
+    <div class="card">
+      <div class="label">Автоматические снапшоты</div>
+      <div class="muted" style="margin-bottom:8px">
+        Хранятся только в этом браузере. При очистке данных сайта исчезнут.
+      </div>
+      <div id="backupList"></div>
+    </div>
+    <button class="s" onclick="show('s-settings')">← Назад</button>
   </div>
 
   <div class="screen" id="s-settings">
@@ -378,6 +386,30 @@ comer;есть;;🍽️" style="min-height:180px"></textarea>
       <div class="muted" style="margin-top:4px" id="backupHint"></div>
     </div>
     <div class="card">
+      <div class="label">Резервная копия</div>
+      <div class="muted" style="margin-bottom:8px">
+        Снапшоты автоматически сохраняются при каждом N-м ответе. Всегда есть 5 последних.
+      </div>
+      <button class="s" onclick="show('s-backups');renderBackups()">🕒 Последние снапшоты</button>
+      <button class="s" onclick="makeSnapshot(true)">📸 Сделать снапшот сейчас</button>
+    </div>
+    <div class="card">
+      <div class="label">GitHub Gist (облако)</div>
+      <div class="muted" style="margin-bottom:8px">
+        Храните слова в облаке и синхронизируйте между устройствами.
+      </div>
+      <input id="gistToken" placeholder="GitHub token (classic, scope: gist)">
+      <input id="gistId" placeholder="Gist ID (заполнится автоматически)">
+      <div class="row" style="margin-top:8px">
+        <button class="s" onclick="gistSave()">⬆️ Сохранить в Gist</button>
+        <button class="s" onclick="gistLoad()">⬇️ Загрузить</button>
+      </div>
+      <div class="muted" style="margin-top:8px" id="gistStatus"></div>
+      <div class="muted" style="margin-top:4px">
+        Токен хранится локально, отправляется только на api.github.com.
+      </div>
+    </div>
+    <div class="card">
       <div class="muted" style="margin-bottom:8px">Данные</div>
       <button class="s" onclick="exportData()">⬇️ Экспорт JSON</button>
       <button class="s" onclick="document.getElementById('importFile').click()">⬆️ Импорт JSON</button>
@@ -406,7 +438,6 @@ const STARTER_DECKS=[
   {id:'places',    name:'Места',         emoji:'📍'}
 ];
 
-/* [pt, ru, пример, deckId, эмодзи] */
 const STARTER=[
   ["água","вода","Quero um copo de água.","food","💧"],
   ["café","кофе","Um café, por favor.","food","☕"],
@@ -526,7 +557,7 @@ const STARTER=[
 ];
 
 const SRS=[1,3,7,14,30,60,120];
-const STORAGE_KEY='ptbr_v8';
+const STORAGE_KEY='ptbr_v9';
 
 let state={
   words:[], decks:[],
@@ -543,7 +574,10 @@ let state={
     reminderTime:'19:00',
     lastReminder:null,
     backupDays:7,
-    lastBackup:null
+    lastBackup:null,
+    snapshotEvery:30,
+    gistToken:'',
+    gistId:''
   },
   activity:{},
   daily:{date:null,count:0},
@@ -556,6 +590,9 @@ let wordsFilter='all';
 let currentMode='cards';
 let reminderTimer=null;
 let sysThemeMQ=null;
+
+const SNAP_KEY='ptbr_snapshots';
+const SNAP_MAX=5;
 
 function esc(s){
   return String(s==null?'':s).replace(/[&<>"']/g,c=>({
@@ -590,9 +627,9 @@ function load(){
     newLimit:20,activeDecks:['all'],dailyGoal:20,
     autoTheme:true,sysTheme:false,reverse:false,
     reminder:false,reminderTime:'19:00',lastReminder:null,
-    backupDays:7,lastBackup:null
+    backupDays:7,lastBackup:null,
+    snapshotEvery:30,gistToken:'',gistId:''
   },state.settings||{});
-  // совместимость со старой версией
   if(state.settings.activeDeck&&!state.settings.activeDecks){
     state.settings.activeDecks=[state.settings.activeDeck];
     delete state.settings.activeDeck;
@@ -613,7 +650,6 @@ function load(){
       id:'w'+i,word:w[0],translation:w[1],example:w[2],deckId:w[3],emoji:w[4]||'',note:''
     }));
   }
-  // чистим активные колоды от удалённых
   state.settings.activeDecks=state.settings.activeDecks.filter(id=>id==='all'||deckById(id));
   if(!state.settings.activeDecks.length)state.settings.activeDecks=['all'];
 }
@@ -622,7 +658,6 @@ function currentHourTheme(){
   const h=new Date().getHours();
   return (h>=7 && h<19) ? 'light' : 'dark';
 }
-
 function systemPrefersDark(){
   return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
@@ -657,14 +692,12 @@ function toggleTheme(){
   else if(state.bg==='light') state.bg='dark';
   save();applyTheme();
 }
-
 function setBg(v){
   state.bg=v;
   if(v==='light') state.theme='light';
   if(v==='dark')  state.theme='dark';
   save();applyTheme();
 }
-
 function onAutoThemeChange(){
   state.settings.autoTheme=!!document.getElementById('autoThemeChk').checked;
   save();applyTheme();
@@ -679,7 +712,6 @@ function onReverseChange(){
   save();
   if(document.getElementById('s-study').classList.contains('on'))renderStudy();
 }
-
 function initSysThemeListener(){
   if(!window.matchMedia)return;
   if(sysThemeMQ)return;
@@ -693,10 +725,7 @@ function isNew(id){return !state.progress[id]}
 function isDue(id){const p=state.progress[id];return !!(p&&p.dueDate&&p.dueDate<=today())}
 function isLearned(id){const p=state.progress[id];return !!(p&&p.level>=3)}
 
-function markActivity(){
-  const t=today();
-  state.activity[t]=(state.activity[t]||0)+1;
-}
+function markActivity(){const t=today();state.activity[t]=(state.activity[t]||0)+1}
 function markDaily(){
   const t=today();
   if(state.daily.date!==t)state.daily={date:t,count:0};
@@ -711,7 +740,6 @@ function updStreak(){
   state.streak.last=t;
   if(state.streak.count>state.streak.best)state.streak.best=state.streak.count;
 }
-
 function ansWord(id,q){
   const p=state.progress[id]||{level:0,dueDate:today(),seen:0};
   if(q===0){p.level=0;p.dueDate=today()}
@@ -725,6 +753,7 @@ function ansWord(id,q){
   p.seen=(p.seen||0)+1;
   state.progress[id]=p;
   updStreak();markActivity();markDaily();save();
+  maybeAutoSnapshot();
 }
 
 if('speechSynthesis' in window){
@@ -751,7 +780,6 @@ function show(id){
   window.scrollTo(0,0);
 }
 
-/* ---- Мультивыбор колод ---- */
 function wordsInActiveDecks(){
   const a=state.settings.activeDecks||['all'];
   if(a.includes('all')||!a.length)return state.words;
@@ -904,7 +932,6 @@ function renderStudy(){
   const dt=document.getElementById('deckTag');
   dt.textContent = d ? ((d.emoji||'🗂️')+' '+d.name) : 'Без колоды';
 
-  // эмодзи-иллюстрация
   const emojiBig=document.getElementById('emojiBig');
   if(cur.emoji){
     emojiBig.textContent=cur.emoji;
@@ -913,7 +940,6 @@ function renderStudy(){
     emojiBig.style.display='none';
   }
 
-  // обратный режим
   const rev=state.settings.reverse;
   const wEl=document.getElementById('w');
   const wRevEl=document.getElementById('wReverse');
@@ -977,14 +1003,8 @@ function ans(q){
 
 function skipCard(){
   if(!cur)return;
-  // не влияет на прогресс — просто идём дальше
   qi++;
-  if(qi>=queue.length){
-    // если это был последний — просто завершаем
-    renderStudy();
-  }else{
-    renderStudy();
-  }
+  renderStudy();
 }
 
 function renderListenOptions(){
@@ -1197,7 +1217,6 @@ function importWordsText(){
   let added=0, skipped=0;
   const now=Date.now();
   lines.forEach((line,i)=>{
-    // разделители: ; | таб | запятая (первая встреченная)
     let parts;
     if(line.includes(';'))parts=line.split(';');
     else if(line.includes('\t'))parts=line.split('\t');
@@ -1305,7 +1324,6 @@ function renderDeckStats(){
   const box=document.getElementById('deckStats');
   if(!box)return;
   const rows=[];
-  // «Без колоды»
   const noDeck=state.words.filter(w=>!w.deckId);
   if(noDeck.length){
     const learned=noDeck.filter(w=>isLearned(w.id)).length;
@@ -1336,7 +1354,6 @@ function onLimitChange(){
   state.settings.newLimit=v;
   save();
 }
-
 function onGoalChange(){
   const v=parseInt(document.getElementById('goalRange').value,10);
   document.getElementById('goalVal').textContent=v;
@@ -1344,7 +1361,6 @@ function onGoalChange(){
   save();
   renderGoalRing();
 }
-
 function onBackupChange(){
   const v=parseInt(document.getElementById('backupRange').value,10);
   document.getElementById('backupVal').textContent=v;
@@ -1352,19 +1368,14 @@ function onBackupChange(){
   save();
   updateBackupHint();
 }
-
 function updateBackupHint(){
   const el=document.getElementById('backupHint');
   if(!el)return;
   const last=state.settings.lastBackup;
-  if(!last){
-    el.textContent='Ещё не делался';
-    return;
-  }
+  if(!last){el.textContent='Ещё не делался';return}
   const d=daysBetween(last,today());
   el.textContent='Последний: '+last+' ('+d+' дн. назад)';
 }
-
 function initSettings(){
   const v=state.settings.newLimit||20;
   document.getElementById('limitRange').value=v;
@@ -1385,6 +1396,10 @@ function initSettings(){
   if(rmchk)rmchk.checked=!!state.settings.reminder;
   const rinp=document.getElementById('reminderTime');
   if(rinp)rinp.value=state.settings.reminderTime||'19:00';
+  const gt=document.getElementById('gistToken');
+  if(gt)gt.value=state.settings.gistToken||'';
+  const gi=document.getElementById('gistId');
+  if(gi)gi.value=state.settings.gistId||'';
   updateBackupHint();
 }
 
@@ -1394,8 +1409,7 @@ function onReminderChange(){
   const on=!!chk.checked;
   if(on && !('Notification' in window)){
     alert('Браузер не поддерживает уведомления');
-    chk.checked=false;
-    return;
+    chk.checked=false;return;
   }
   if(on){
     Notification.requestPermission().then(p=>{
@@ -1403,45 +1417,33 @@ function onReminderChange(){
         alert('Разрешение не получено');
         chk.checked=false;
         state.settings.reminder=false;
-        save();
-        return;
+        save();return;
       }
       state.settings.reminder=true;
-      save();
-      scheduleReminderCheck();
+      save();scheduleReminderCheck();
     });
   }else{
     state.settings.reminder=false;
     save();
   }
 }
-
 function onReminderTimeChange(){
   const inp=document.getElementById('reminderTime');
   state.settings.reminderTime=inp.value||'19:00';
   save();
 }
-
 function testReminder(){
-  if(!('Notification' in window)){
-    alert('Уведомления не поддерживаются');
-    return;
-  }
+  if(!('Notification' in window)){alert('Уведомления не поддерживаются');return}
   Notification.requestPermission().then(p=>{
-    if(p==='granted'){
-      new Notification('🇧🇷 Português BR',{body:'Тестовое напоминание — всё работает!'});
-    }else{
-      alert('Разрешение не получено');
-    }
+    if(p==='granted')new Notification('🇧🇷 Português BR',{body:'Тестовое напоминание — всё работает!'});
+    else alert('Разрешение не получено');
   });
 }
-
 function scheduleReminderCheck(){
   if(reminderTimer)clearInterval(reminderTimer);
   reminderTimer=setInterval(checkReminder,60000);
   checkReminder();
 }
-
 function checkReminder(){
   if(!state.settings.reminder)return;
   if(!('Notification' in window)||Notification.permission!=='granted')return;
@@ -1473,14 +1475,9 @@ function exportData(auto){
     a.download='ptbr-backup-'+today()+'.json';
     document.body.appendChild(a);a.click();document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    if(auto){
-      state.settings.lastBackup=today();
-      save();
-      updateBackupHint();
-    }
+    if(auto){state.settings.lastBackup=today();save();updateBackupHint()}
   }catch(e){alert('Ошибка экспорта: '+e.message)}
 }
-
 function importData(ev){
   const file=ev.target.files&&ev.target.files[0];
   if(!file)return;
@@ -1501,7 +1498,8 @@ function importData(ev){
         newLimit:20,activeDecks:['all'],dailyGoal:20,
         autoTheme:true,sysTheme:false,reverse:false,
         reminder:false,reminderTime:'19:00',lastReminder:null,
-        backupDays:7,lastBackup:null
+        backupDays:7,lastBackup:null,
+        snapshotEvery:30,gistToken:'',gistId:''
       },state.settings||{});
       if(state.settings.activeDeck&&!state.settings.activeDecks){
         state.settings.activeDecks=[state.settings.activeDeck];
@@ -1520,14 +1518,11 @@ function importData(ev){
       applyTheme();initSettings();setMode(currentMode);
       alert('Импорт выполнен');
       show('s-home');renderHome();
-    }catch(e){
-      alert('Ошибка чтения: '+e.message);
-    }
+    }catch(e){alert('Ошибка чтения: '+e.message)}
   };
   reader.readAsText(file);
   ev.target.value='';
 }
-
 function resetAll(){
   if(!confirm('Удалить все слова и прогресс?'))return;
   if(!confirm('Точно? Это действие необратимо.'))return;
@@ -1539,7 +1534,8 @@ function resetAll(){
       newLimit:20,activeDecks:['all'],dailyGoal:20,
       autoTheme:auto,sysTheme:sys,reverse:false,
       reminder:false,reminderTime:'19:00',lastReminder:null,
-      backupDays:7,lastBackup:null
+      backupDays:7,lastBackup:null,
+      snapshotEvery:30,gistToken:'',gistId:''
     },
     activity:{},daily:{date:null,count:0},
     theme:theme,bg:bg,mode:'cards'
@@ -1553,12 +1549,170 @@ function resetAll(){
 function checkAutoBackup(){
   const days=state.settings.backupDays||7;
   const last=state.settings.lastBackup;
-  if(!last){return} // первый раз — ждём ручного экспорта
+  if(!last)return;
   const diff=daysBetween(last,today());
   if(diff>=days){
     const ok=confirm('Прошло '+diff+' дней с последнего бэкапа. Сделать сейчас?');
     if(ok)exportData(true);
   }
+}
+
+/* ===== СНАПШОТЫ ===== */
+function loadSnapshots(){
+  try{
+    const r=localStorage.getItem(SNAP_KEY);
+    return r?JSON.parse(r):[];
+  }catch(e){return []}
+}
+function saveSnapshots(list){
+  try{localStorage.setItem(SNAP_KEY,JSON.stringify(list))}catch(e){}
+}
+function makeSnapshot(manual){
+  try{
+    const snap={
+      ts:Date.now(),
+      date:today(),
+      words:state.words.length,
+      learned:state.words.filter(w=>isLearned(w.id)).length,
+      data:JSON.stringify(state)
+    };
+    const list=loadSnapshots();
+    const idx=list.findIndex(s=>Date.now()-s.ts < 5*60*1000);
+    if(idx>=0)list[idx]=snap;
+    else list.unshift(snap);
+    saveSnapshots(list.slice(0,SNAP_MAX));
+    if(manual)alert('✅ Снапшот сохранён: '+snap.words+' слов, '+snap.learned+' выучено');
+  }catch(e){
+    if(manual)alert('Ошибка снапшота: '+e.message);
+  }
+}
+function maybeAutoSnapshot(){
+  const total=Object.values(state.activity).reduce((a,b)=>a+b,0);
+  const every=state.settings.snapshotEvery||30;
+  if(total>0 && total%every===0)makeSnapshot(false);
+}
+function renderBackups(){
+  const box=document.getElementById('backupList');
+  if(!box)return;
+  const list=loadSnapshots();
+  if(!list.length){
+    box.innerHTML='<div class="muted center" style="padding:12px">Пока нет снапшотов</div>';
+    return;
+  }
+  box.innerHTML=list.map((s,i)=>{
+    const ago=Math.round((Date.now()-s.ts)/60000);
+    const agoTxt = ago<1 ? 'только что' : (ago<60 ? ago+' мин назад' : Math.round(ago/60)+' ч назад');
+    return '<div class="deck-manage">'+
+      '<div class="name">'+
+        '<div>'+
+          '<div>'+esc(s.date)+' <span class="muted">· '+esc(agoTxt)+'</span></div>'+
+          '<div class="muted">'+s.words+' слов · '+s.learned+' выучено</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="actions">'+
+        '<button class="s" onclick="restoreSnapshot('+i+')">↺</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+function restoreSnapshot(idx){
+  const list=loadSnapshots();
+  const snap=list[idx];
+  if(!snap){alert('Снапшот не найден');return}
+  if(!confirm('Восстановить снапшот от '+snap.date+'? Текущие данные будут заменены.'))return;
+  try{
+    const data=JSON.parse(snap.data);
+    state=Object.assign(state,data);
+    save();applyTheme();initSettings();setMode(state.mode||'cards');renderHome();
+    alert('✅ Восстановлено: '+snap.words+' слов');
+    show('s-home');
+  }catch(e){alert('Ошибка восстановления: '+e.message)}
+}
+
+/* ===== GITHUB GIST ===== */
+function gistStatus(msg,color){
+  const el=document.getElementById('gistStatus');
+  if(!el)return;
+  el.textContent=msg;
+  el.style.color=color||'var(--muted)';
+}
+async function gistSave(){
+  const token=(document.getElementById('gistToken').value||state.settings.gistToken||'').trim();
+  const gistId=(document.getElementById('gistId').value||state.settings.gistId||'').trim();
+  if(!token){gistStatus('Нужен GitHub token','var(--warn)');return}
+  state.settings.gistToken=token;
+  state.settings.gistId=gistId;
+  save();
+  gistStatus('Отправка…','var(--muted)');
+  try{
+    const content=JSON.stringify(state,null,2);
+    const body={
+      description:'Português BR backup',
+      public:false,
+      files:{'ptbr-backup.json':{content:content}}
+    };
+    let url='https://api.github.com/gists';
+    let method='POST';
+    if(gistId){url='https://api.github.com/gists/'+gistId;method='PATCH'}
+    const res=await fetch(url,{
+      method:method,
+      headers:{
+        'Authorization':'Bearer '+token,
+        'Accept':'application/vnd.github+json',
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify(body)
+    });
+    if(!res.ok){
+      const err=await res.text();
+      gistStatus('Ошибка '+res.status+': '+err.slice(0,120),'var(--bad)');
+      return;
+    }
+    const data=await res.json();
+    if(!gistId){
+      state.settings.gistId=data.id;
+      save();
+      document.getElementById('gistId').value=data.id;
+    }
+    state.settings.lastBackup=today();
+    save();updateBackupHint();
+    gistStatus('✅ Сохранено в Gist ('+data.id+')','var(--ok)');
+  }catch(e){gistStatus('Ошибка сети: '+e.message,'var(--bad)')}
+}
+async function gistLoad(){
+  const token=(document.getElementById('gistToken').value||state.settings.gistToken||'').trim();
+  const gistId=(document.getElementById('gistId').value||state.settings.gistId||'').trim();
+  if(!token||!gistId){gistStatus('Нужны token и Gist ID','var(--warn)');return}
+  if(!confirm('Загрузить данные из Gist и заменить текущие?'))return;
+  gistStatus('Загрузка…','var(--muted)');
+  try{
+    const res=await fetch('https://api.github.com/gists/'+gistId,{
+      headers:{
+        'Authorization':'Bearer '+token,
+        'Accept':'application/vnd.github+json'
+      }
+    });
+    if(!res.ok){gistStatus('Ошибка '+res.status,'var(--bad)');return}
+    const data=await res.json();
+    const file=data.files['ptbr-backup.json'];
+    if(!file){gistStatus('Файл ptbr-backup.json не найден','var(--bad)');return}
+    let content=file.content;
+    if(file.truncated && file.raw_url){
+      const raw=await fetch(file.raw_url);
+      content=await raw.text();
+    }
+    const imported=JSON.parse(content);
+    if(!imported||!Array.isArray(imported.words)){
+      gistStatus('Неверный формат','var(--bad)');return;
+    }
+    makeSnapshot(false);
+    state=Object.assign(state,imported);
+    state.settings.gistToken=token;
+    state.settings.gistId=gistId;
+    save();applyTheme();initSettings();setMode(state.mode||'cards');renderHome();
+    gistStatus('✅ Загружено: '+state.words.length+' слов','var(--ok)');
+    show('s-home');
+  }catch(e){gistStatus('Ошибка: '+e.message,'var(--bad)')}
 }
 
 /* ===== SERVICE WORKER ===== */
@@ -1578,6 +1732,14 @@ renderHome();
 fillImportDeckSelect('');
 if(state.settings.reminder)scheduleReminderCheck();
 setTimeout(checkAutoBackup,1500);
+
+/* автоснапшот при запуске, если давно не делали */
+(function(){
+  const list=loadSnapshots();
+  const last=list[0];
+  const need=!last || (Date.now()-last.ts > 24*60*60*1000);
+  if(need)setTimeout(()=>makeSnapshot(false),2000);
+})();
 </script>
 </body>
 </html>
